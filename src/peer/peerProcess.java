@@ -241,18 +241,12 @@ public class peerProcess {
      * This process to used to set current peer details
      */
     public static void setCurrentPeerDetails() {
-        Set<String> remotePeerIDs = remotePeerDetailsMap.keySet();
-        for (String peerID : remotePeerIDs) {
-            RemotePeerDetails remotePeerDetails = remotePeerDetailsMap.get(peerID);
-            if (remotePeerDetails.getId().equals(currentPeerID)) {
-                currentPeerPort = Integer.parseInt(remotePeerDetails.getPort());
-                peerIndex = remotePeerDetails.getIndex();
-                if (remotePeerDetails.getHasFile() == 1) {
-                    isFirstPeer = true;
-                    currentPeerHasFile = remotePeerDetails.getHasFile();
-                    break;
-                }
-            }
+        final RemotePeerDetails remotePeerDetails = remotePeerDetailsMap.get(currentPeerID);
+        currentPeerPort = Integer.parseInt(remotePeerDetails.getPort());
+        peerIndex = remotePeerDetails.getIndex();
+        if (remotePeerDetails.getHasFile() == 1) {
+            isFirstPeer = true;
+            currentPeerHasFile = remotePeerDetails.getHasFile();
         }
 
     }

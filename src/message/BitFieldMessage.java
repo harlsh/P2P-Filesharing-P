@@ -73,7 +73,7 @@ public class BitFieldMessage {
      */
     public void setPieceDetails(String peerId, int hasFile) {
         for (FilePiece filePiece : filePieces) {
-            filePiece.setIsPresent(hasFile == 1 ? 1 : 0);
+            filePiece.setIsPresent(hasFile);
             filePiece.setFromPeerID(peerId);
         }
     }

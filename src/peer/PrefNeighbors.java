@@ -116,12 +116,10 @@ public class PrefNeighbors extends TimerTask {
      * @param peerID - peerID to which the message should be sent
      */
     private void sendHaveMessage(Socket socket, String peerID) {
-        //logAndShowInConsole(peerProcess.currentPeerID + " sending HAVE message to Peer " + peerID);
+        logAndShowInConsole(peer.peerProcess.currentPeerID + " sending HAVE message to Peer " + peerID);
         byte[] bitFieldInBytes = peerProcess.bitFieldMessage.getBytes();
         Message message = new Message(MessageConstants.MESSAGE_HAVE, bitFieldInBytes);
         SendMessageToSocket(socket, Message.convertMessageToByteArray(message));
-
-        bitFieldInBytes = null;
     }
 
     /**
@@ -134,6 +132,7 @@ public class PrefNeighbors extends TimerTask {
             OutputStream out = socket.getOutputStream();
             out.write(messageInBytes);
         } catch (IOException e) {
+            System.out.println(e);
         }
     }
 

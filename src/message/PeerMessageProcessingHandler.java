@@ -255,7 +255,7 @@ public class PeerMessageProcessingHandler implements Runnable {
         logAndShowInConsole(currentPeerID + " sending a DOWNLOAD COMPLETE message to Peer " + peerID);
         Message message = new Message(MessageConstants.MESSAGE_DOWNLOADED);
         byte[] messageInBytes = Message.convertMessageToByteArray(message);
-        SendMessageToSocket(socket, messageInBytes);
+        sendMessageToSocket(socket, messageInBytes);
     }
 
     /**
@@ -265,10 +265,10 @@ public class PeerMessageProcessingHandler implements Runnable {
      * @param peerID - peerID to which the message should be sent
      */
     private void sendHaveMessage(Socket socket, String peerID) {
-        //logAndShowInConsole(peerProcess.currentPeerID + " sending HAVE message to Peer " + peerID);
+        //logAndShowInConsole(peer.peerProcess.currentPeerID + " sending HAVE message to Peer " + peerID);
         byte[] bitFieldInBytes = peerProcess.bitFieldMessage.getBytes();
         Message message = new Message(MessageConstants.MESSAGE_HAVE, bitFieldInBytes);
-        SendMessageToSocket(socket, Message.convertMessageToByteArray(message));
+        sendMessageToSocket(socket, Message.convertMessageToByteArray(message));
 
         bitFieldInBytes = null;
     }
@@ -312,7 +312,7 @@ public class PeerMessageProcessingHandler implements Runnable {
         byte[] pieceIndexInBytes = PeerProcessUtils.convertIntToByteArray(pieceIndex);
         System.arraycopy(pieceIndexInBytes, 0, pieceInBytes, 0, pieceIndexInBytes.length);
         Message message = new Message(MessageConstants.MESSAGE_REQUEST, pieceIndexInBytes);
-        SendMessageToSocket(socket, Message.convertMessageToByteArray(message));
+        sendMessageToSocket(socket, Message.convertMessageToByteArray(message));
 
         pieceInBytes = null;
         pieceIndexInBytes = null;
@@ -345,13 +345,9 @@ public class PeerMessageProcessingHandler implements Runnable {
             System.arraycopy(bytesRead, 0, buffer, MessageConstants.PIECE_INDEX_LENGTH, numberOfBytesRead);
 
             Message messageToBeSent = new Message(MessageConstants.MESSAGE_PIECE, buffer);
-            SendMessageToSocket(socket, Message.convertMessageToByteArray(messageToBeSent));
+            sendMessageToSocket(socket, Message.convertMessageToByteArray(messageToBeSent));
             randomAccessFile.close();
 
-            buffer = null;
-            bytesRead = null;
-            pieceIndexInBytes = null;
-            messageToBeSent = null;
         } catch (IOException e) {
 
         }
@@ -378,7 +374,7 @@ public class PeerMessageProcessingHandler implements Runnable {
         logAndShowInConsole(currentPeerID + " sending a CHOKE message to Peer " + remotePeerID);
         Message message = new Message(MessageConstants.MESSAGE_CHOKE);
         byte[] messageInBytes = Message.convertMessageToByteArray(message);
-        SendMessageToSocket(socket, messageInBytes);
+        sendMessageToSocket(socket, messageInBytes);
     }
 
     /**
@@ -391,7 +387,7 @@ public class PeerMessageProcessingHandler implements Runnable {
         logAndShowInConsole(currentPeerID + " sending a UNCHOKE message to Peer " + remotePeerID);
         Message message = new Message(MessageConstants.MESSAGE_UNCHOKE);
         byte[] messageInBytes = Message.convertMessageToByteArray(message);
-        SendMessageToSocket(socket, messageInBytes);
+        sendMessageToSocket(socket, messageInBytes);
     }
 
     /**
@@ -404,7 +400,7 @@ public class PeerMessageProcessingHandler implements Runnable {
         logAndShowInConsole(currentPeerID + " sending a NOT INTERESTED message to Peer " + remotePeerID);
         Message message = new Message(MessageConstants.MESSAGE_NOT_INTERESTED);
         byte[] messageInBytes = Message.convertMessageToByteArray(message);
-        SendMessageToSocket(socket, messageInBytes);
+        sendMessageToSocket(socket, messageInBytes);
     }
 
     /**
@@ -417,7 +413,7 @@ public class PeerMessageProcessingHandler implements Runnable {
         logAndShowInConsole(currentPeerID + " sending an INTERESTED message to Peer " + remotePeerID);
         Message message = new Message(MessageConstants.MESSAGE_INTERESTED);
         byte[] messageInBytes = Message.convertMessageToByteArray(message);
-        SendMessageToSocket(socket, messageInBytes);
+        sendMessageToSocket(socket, messageInBytes);
     }
 
     /**
@@ -431,9 +427,8 @@ public class PeerMessageProcessingHandler implements Runnable {
         byte[] bitFieldMessageInByteArray = peerProcess.bitFieldMessage.getBytes();
         Message message = new Message(MessageConstants.MESSAGE_BITFIELD, bitFieldMessageInByteArray);
         byte[] messageInBytes = Message.convertMessageToByteArray(message);
-        SendMessageToSocket(socket, messageInBytes);
+        sendMessageToSocket(socket, messageInBytes);
 
-        bitFieldMessageInByteArray = null;
     }
 
     /**
@@ -463,7 +458,7 @@ public class PeerMessageProcessingHandler implements Runnable {
      * @param socket         - socket in which the message to be sent
      * @param messageInBytes - message to be sent
      */
-    private void SendMessageToSocket(Socket socket, byte[] messageInBytes) {
+    private void sendMessageToSocket(Socket socket, byte[] messageInBytes) {
         try {
             OutputStream out = socket.getOutputStream();
             out.write(messageInBytes);

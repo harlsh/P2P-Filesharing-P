@@ -1,8 +1,7 @@
-import peer.RemotePeerDetails;
-
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
+import peer.RemotePeerDetails;
 
 
 import java.io.ByteArrayOutputStream;
@@ -44,12 +43,14 @@ public class StartRemotePeers {
      */
     @SuppressWarnings("unchecked")
     public static void main(String[] args) {
-        // TODO Auto-generated method stub
+
         try {
             StartRemotePeers myStart = new StartRemotePeers();
             myStart.getConfiguration();
             Session session = null;
             ChannelExec channel = null;
+
+            System.out.println("path: " + path);
 
             Scanner scanner = new Scanner(System.in);
             System.out.print("Enter username: ");
@@ -72,21 +73,13 @@ public class StartRemotePeers {
 
                 channel = (ChannelExec) session.openChannel("exec");
 
-                if(i==0) {
-                    channel.setCommand("cd " + path + "; make peerProcess.class");
-                    ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
-                    channel.setOutputStream(responseStream);
-                    channel.connect();
-                    Thread.sleep(3000);
-                }
-
-                channel.setCommand("cd " + path + "; java peerProcess " + pInfo.getId());
+                channel.setCommand("cd " + path + "; java peer.peerProcess " + pInfo.getId());
                 ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
                 channel.setOutputStream(responseStream);
                 channel.connect();
                 Thread.sleep(3000);
             }
-            System.out.println("Starting all remote peers has done.");
+            System.out.println("Started all remote peers");
             System.exit(0);
         } catch (Exception ex) {
             System.out.println(ex);
