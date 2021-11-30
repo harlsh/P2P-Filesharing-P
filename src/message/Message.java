@@ -5,9 +5,6 @@ import peer.PeerProcessUtils;
 
 import java.io.UnsupportedEncodingException;
 
-/**
- * Class which handles messages except handshake, bitfield and piece messages
- */
 public class Message {
     //Type of message
     private String type;
@@ -22,16 +19,9 @@ public class Message {
     //The content of the message
     private byte[] payload = null;
 
-    /**
-     * Empty constructor to create message object
-     */
     public Message() {
     }
 
-    /**
-     * Constructor to create message object based on message type
-     * @param messageType - type of the message
-     */
     public Message(String messageType) {
         try {
             if (messageType == MessageConstants.MESSAGE_INTERESTED || messageType == MessageConstants.MESSAGE_NOT_INTERESTED ||
@@ -49,11 +39,6 @@ public class Message {
         }
     }
 
-    /**
-     * Constructor to create message object based on message type and payload
-     * @param messageType - type of the message
-     * @param payload - message payload
-     */
     public Message(String messageType, byte[] payload) {
         try {
             if (payload != null) {
@@ -84,10 +69,6 @@ public class Message {
         }
     }
 
-    /**
-     * This method is used to set message type and message type in bytes with message type received in params
-     * @param messageType - type of message to be set
-     */
     public void setMessageType(String messageType) {
         type = messageType.trim();
         try {
@@ -98,20 +79,12 @@ public class Message {
         }
     }
 
-    /**
-     * This method is used to set message length, data length and message length in bytes with message length received in params
-     * @param messageLength - length of message to be set
-     */
     public void setMessageLength(int messageLength) {
         dataLength = messageLength;
         length = ((Integer) messageLength).toString();
         lengthInBytes = PeerProcessUtils.convertIntToByteArray(messageLength);
     }
 
-    /**
-     * This method is used to set message length, data length and message length in bytes with message length received in params
-     * @param len - length of message to be set
-     */
     public void setMessageLength(byte[] len) {
 
         Integer l = PeerProcessUtils.convertByteArrayToInt(len);
@@ -120,10 +93,6 @@ public class Message {
         this.dataLength = l;
     }
 
-    /**
-     * This method is used to set message type and message type in bytes with message type received in params
-     * @param type - type of message to be set
-     */
     public void setMessageType(byte[] type) {
         try {
             this.type = new String(type, MessageConstants.DEFAULT_CHARSET);
@@ -133,19 +102,10 @@ public class Message {
         }
     }
 
-    /**
-     * This method is used to return message data length
-     * @return message data length
-     */
     public int getMessageLengthAsInteger() {
         return this.dataLength;
     }
 
-    /**
-     * This method is used to convert message to byte array
-     * @param message - Message instance to be converted
-     * @return byte array of the message
-     */
     public static byte[] convertMessageToByteArray(Message message) {
         byte[] messageInByteArray = null;
         try {
@@ -176,11 +136,6 @@ public class Message {
         return messageInByteArray;
     }
 
-    /**
-     * This method is used to convert byte array into message object
-     * @param message - byte array to be converted
-     * @return message instance
-     */
     public static Message convertByteArrayToMessage(byte[] message) {
 
         Message msg = new Message();
@@ -218,92 +173,69 @@ public class Message {
         return msg;
     }
 
-    /**
-     * This method is used to get the type of message
-     * @return type of message
-     */
     public String getType() {
         return type;
     }
 
-    /**
-     * This method is used to set the type of message
-     * @param type - type of message
-     */
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    /**
-     * This method is used to get the length of message
-     * @return length of message
-     */
-    public String getLength() {
-        return length;
-    }
-
-    /**
-     * This method is used to set the length of message
-     * @param length - length of the message
-     */
-    public void setLength(String length) {
-        this.length = length;
-    }
-
-    /**
-     * This method is used to get the type of message in bytes
-     * @return type in bytes
-     */
     public byte[] getTypeInBytes() {
         return typeInBytes;
     }
 
-    /**
-     * This method is used to set the type of message in bytes
-     * @param typeInBytes - type in bytes
-     */
-    public void setTypeInBytes(byte[] typeInBytes) {
-        this.typeInBytes = typeInBytes;
-    }
-
-    /**
-     * This method is used to get the length of message in bytes
-     * @return length of the message in bytes
-     */
     public byte[] getLengthInBytes() {
         return lengthInBytes;
     }
 
-    /**
-     * This method is used to set the length of message in bytes
-     * @param lengthInBytes - length of the message in bytes
-     */
-    public void setLengthInBytes(byte[] lengthInBytes) {
-        this.lengthInBytes = lengthInBytes;
-    }
-
-    /**
-     * This method is used to get the content of message
-     * @return content of message
-     */
     public byte[] getPayload() {
         return payload;
     }
 
-    /**
-     * This method is used to set the content of message
-     * @param payload - content of message
-     */
     public void setPayload(byte[] payload) {
         this.payload = payload;
     }
 
-    /**
-     * This method is used to log a message in a log file and show it in console
-     * @param message - message to be logged and showed in console
-     */
     private static void logAndShowInConsole(String message) {
         LogHelper.logAndShowInConsole(message);
     }
 
+    public static class MessageConstants {
+
+        public static final String DEFAULT_CHARSET = "UTF8";
+
+        public static final int HANDSHAKE_MESSAGE_LENGTH = 32;
+
+        public static final int HANDSHAKE_HEADER_LENGTH = 18;
+
+        public static final int HANDSHAKE_ZEROBITS_LENGTH = 10;
+
+        public static final int HANDSHAKE_PEERID_LENGTH = 4;
+
+        public static final int MESSAGE_LENGTH = 4;
+
+        public static final int MESSAGE_TYPE = 1;
+
+        public static final String MESSAGE_CHOKE = "0";
+
+        public static final String MESSAGE_UNCHOKE = "1";
+
+        public static final String MESSAGE_INTERESTED = "2";
+
+        public static final String MESSAGE_NOT_INTERESTED = "3";
+
+        public static final String MESSAGE_HAVE = "4";
+
+        public static final String MESSAGE_BITFIELD = "5";
+
+        public static final String MESSAGE_REQUEST = "6";
+
+        public static final String MESSAGE_PIECE = "7";
+
+        public static final String MESSAGE_DOWNLOADED = "8";
+
+        public static final String HANDSHAKE_HEADER = "P2PFILESHARINGPROJ";
+
+        public static final int PIECE_INDEX_LENGTH = 4;
+
+        public static final int ACTIVE_CONNECTION = 1;
+
+    }
 }

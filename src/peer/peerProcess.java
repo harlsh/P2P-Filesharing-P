@@ -3,8 +3,9 @@ package peer;
 import config.CommonConfiguration;
 import logging.LogHelper;
 import message.BitFieldMessage;
-import message.PeerMessageHandler;
-import message.PeerMessageProcessingHandler;
+import server.PeerMessageHandler;
+import server.PeerMessageProcessingHandler;
+import server.PeerServerHandler;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,7 +16,10 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.List;
+import java.util.Set;
+import java.util.Timer;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -107,10 +111,10 @@ public class peerProcess {
             startFileServerReceiverThreads(process);
 
             //update preferred neighbors list
-            determinePreferredNeighbors();
+            determinePreferredNeighbors(); // ryan
 
             //update optimistically unchoked neighbor list
-            determineOptimisticallyUnchockedNeighbours();
+            determineOptimisticallyUnchockedNeighbours(); // ryan
 
             //if all the peers have completed downloading the file i.e, all entries in peerinfo.cfg update to 1 terminate current peer
             terminatePeer(process);

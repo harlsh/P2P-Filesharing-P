@@ -1,7 +1,8 @@
-package message;
+package server;
 
 import config.CommonConfiguration;
 import logging.LogHelper;
+import message.*;
 import peer.PeerProcessUtils;
 import peer.RemotePeerDetails;
 import peer.peerProcess;
@@ -19,31 +20,15 @@ import java.util.Set;
  */
 public class PeerMessageProcessingHandler implements Runnable {
 
-    //PeerID of the host
+
     private static String currentPeerID;
-    //File to handle a piece
+
     private RandomAccessFile randomAccessFile;
 
-    /**
-     * Constructor to initialize PeerMessageProcessingHandler object with peerID from arguments
-     *
-     * @param peerID - peerID to be set
-     */
     public PeerMessageProcessingHandler(String peerID) {
         currentPeerID = peerID;
     }
 
-    /**
-     * Empty constructor to initialize PeerMessageProcessingHandler object
-     */
-    public PeerMessageProcessingHandler() {
-        currentPeerID = null;
-    }
-
-    /**
-     * This method runs everytime PeerMessageProcessingHandler thread is started.
-     * It reads messages from message queue and processes them. It sends the appropriate messages based on the type of message received.
-     */
     @Override
     public void run() {
         MessageDetails messageDetails;
@@ -53,21 +38,20 @@ public class PeerMessageProcessingHandler implements Runnable {
 
         while (true) {
             //Read message from queue
-            messageDetails = MessageQueue.getMessageFromQueue();
+            messageDetails = PeerMessageHandler.messageDetailsConcurrentLinkedQueue.poll();
             while (messageDetails == null) {
-                Thread.currentThread();
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
                 }
-                messageDetails = MessageQueue.getMessageFromQueue();
+                messageDetails = PeerMessageHandler.messageDetailsConcurrentLinkedQueue.poll();
             }
             message = messageDetails.getMessage();
             messageType = message.getType();
             remotePeerID = messageDetails.getFromPeerID();
             int peerState = peerProcess.remotePeerDetailsMap.get(remotePeerID).getPeerState();
 
-            if (messageType.equals(MessageConstants.MESSAGE_HAVE) && peerState != 14) {
+            if (messageType.equals(Message.MessageConstants.MESSAGE_HAVE) && peerState != 14) {
                 //Received a interesting pieces message
                 logAndShowInConsole(currentPeerID + " contains interesting pieces from Peer " + remotePeerID);
                 if (isPeerInterested(message, remotePeerID)) {
@@ -79,14 +63,14 @@ public class PeerMessageProcessingHandler implements Runnable {
                 }
             } else {
                 if (peerState == 2) {
-                    if (messageType.equals(MessageConstants.MESSAGE_BITFIELD)) {
+                    if (messageType.equals(Message.MessageConstants.MESSAGE_BITFIELD)) {
                         //Received bitfield message
                         logAndShowInConsole(currentPeerID + " received a BITFIELD message from Peer " + remotePeerID);
                         sendBitFieldMessage(peerProcess.peerToSocketMap.get(remotePeerID), remotePeerID);
                         peerProcess.remotePeerDetailsMap.get(remotePeerID).setPeerState(3);
                     }
                 } else if (peerState == 3) {
-                    if (messageType.equals(MessageConstants.MESSAGE_INTERESTED)) {
+                    if (messageType.equals(Message.MessageConstants.MESSAGE_INTERESTED)) {
                         //Received interested message
                         logAndShowInConsole(currentPeerID + " receieved an INTERESTED message from Peer " + remotePeerID);
                         peerProcess.remotePeerDetailsMap.get(remotePeerID).setIsInterested(1);
@@ -101,7 +85,7 @@ public class PeerMessageProcessingHandler implements Runnable {
                             peerProcess.remotePeerDetailsMap.get(remotePeerID).setIsChoked(0);
                             peerProcess.remotePeerDetailsMap.get(remotePeerID).setPeerState(4);
                         }
-                    } else if (messageType.equals(MessageConstants.MESSAGE_NOT_INTERESTED)) {
+                    } else if (messageType.equals(Message.MessageConstants.MESSAGE_NOT_INTERESTED)) {
                         //Received not interested message
                         logAndShowInConsole(currentPeerID + " receieved an NOT INTERESTED message from Peer " + remotePeerID);
                         peerProcess.remotePeerDetailsMap.get(remotePeerID).setIsInterested(0);
@@ -109,7 +93,7 @@ public class PeerMessageProcessingHandler implements Runnable {
                         peerProcess.remotePeerDetailsMap.get(remotePeerID).setPeerState(5);
                     }
                 } else if (peerState == 4) {
-                    if (messageType.equals(MessageConstants.MESSAGE_REQUEST)) {
+                    if (messageType.equals(Message.MessageConstants.MESSAGE_REQUEST)) {
                         //Received request message
                         //send file piece to the requestor
                         sendFilePiece(peerProcess.peerToSocketMap.get(remotePeerID), message, remotePeerID);
@@ -133,7 +117,7 @@ public class PeerMessageProcessingHandler implements Runnable {
                         }
                     }
                 } else if (peerState == 8) {
-                    if (messageType.equals(MessageConstants.MESSAGE_BITFIELD)) {
+                    if (messageType.equals(Message.MessageConstants.MESSAGE_BITFIELD)) {
                         //Received bifield message
                         if (isPeerInterested(message, remotePeerID)) {
                             sendInterestedMessage(peerProcess.peerToSocketMap.get(remotePeerID), remotePeerID);
@@ -144,12 +128,12 @@ public class PeerMessageProcessingHandler implements Runnable {
                         }
                     }
                 } else if (peerState == 9) {
-                    if (messageType.equals(MessageConstants.MESSAGE_CHOKE)) {
+                    if (messageType.equals(Message.MessageConstants.MESSAGE_CHOKE)) {
                         //Received choke message
                         logAndShowInConsole(currentPeerID + " is CHOKED by Peer " + remotePeerID);
                         peerProcess.remotePeerDetailsMap.get(remotePeerID).setIsChoked(1);
                         peerProcess.remotePeerDetailsMap.get(remotePeerID).setPeerState(14);
-                    } else if (messageType.equals(MessageConstants.MESSAGE_UNCHOKE)) {
+                    } else if (messageType.equals(Message.MessageConstants.MESSAGE_UNCHOKE)) {
                         //Received unchoke message
                         logAndShowInConsole(currentPeerID + " is UNCHOKED by Peer " + remotePeerID);
                         //get the piece index which is present in remote peer but not in current peer and send a request message
@@ -163,21 +147,21 @@ public class PeerMessageProcessingHandler implements Runnable {
                         }
                     }
                 } else if (peerState == 11) {
-                    if (messageType.equals(MessageConstants.MESSAGE_CHOKE)) {
+                    if (messageType.equals(Message.MessageConstants.MESSAGE_CHOKE)) {
                         //Received choke message
                         logAndShowInConsole(currentPeerID + " is CHOKED by Peer " + remotePeerID);
                         peerProcess.remotePeerDetailsMap.get(remotePeerID).setIsChoked(1);
                         peerProcess.remotePeerDetailsMap.get(remotePeerID).setPeerState(14);
-                    } else if (messageType.equals(MessageConstants.MESSAGE_PIECE)) {
+                    } else if (messageType.equals(Message.MessageConstants.MESSAGE_PIECE)) {
                         //Received piece message
                         byte[] payloadInBytes = message.getPayload();
                         //compute data downloading rate of the peer
                         peerProcess.remotePeerDetailsMap.get(remotePeerID).setEndTime(new Date());
                         long totalTime = peerProcess.remotePeerDetailsMap.get(remotePeerID).getEndTime().getTime()
                                 - peerProcess.remotePeerDetailsMap.get(remotePeerID).getStartTime().getTime();
-                        double dataRate = ((double) (payloadInBytes.length + MessageConstants.MESSAGE_LENGTH + MessageConstants.MESSAGE_TYPE) / (double) totalTime) * 100;
+                        double dataRate = ((double) (payloadInBytes.length + Message.MessageConstants.MESSAGE_LENGTH + Message.MessageConstants.MESSAGE_TYPE) / (double) totalTime) * 100;
                         peerProcess.remotePeerDetailsMap.get(remotePeerID).setDataRate(dataRate);
-                        FilePiece filePiece = FilePiece.convertByteArrayToFilePiece(payloadInBytes);
+                        FilePiece filePiece = FilePieceDelegate.convertByteArrayToFilePiece(payloadInBytes);
                         //update the piece information in current peer bitfield
                         peerProcess.bitFieldMessage.updateBitFieldInformation(remotePeerID, filePiece);
                         int firstDifferentPieceIndex = getFirstDifferentPieceIndex(remotePeerID);
@@ -215,7 +199,7 @@ public class PeerMessageProcessingHandler implements Runnable {
                         }
                     }
                 } else if (peerState == 14) {
-                    if (messageType.equals(MessageConstants.MESSAGE_HAVE)) {
+                    if (messageType.equals(Message.MessageConstants.MESSAGE_HAVE)) {
                         //Received contains interesting pieces
                         logAndShowInConsole(currentPeerID + " contains interesting pieces from Peer " + remotePeerID);
                         if (isPeerInterested(message, remotePeerID)) {
@@ -225,7 +209,7 @@ public class PeerMessageProcessingHandler implements Runnable {
                             sendNotInterestedMessage(peerProcess.peerToSocketMap.get(remotePeerID), remotePeerID);
                             peerProcess.remotePeerDetailsMap.get(remotePeerID).setPeerState(13);
                         }
-                    } else if (messageType.equals(MessageConstants.MESSAGE_UNCHOKE)) {
+                    } else if (messageType.equals(Message.MessageConstants.MESSAGE_UNCHOKE)) {
                         //Received unchoked message
                         logAndShowInConsole(currentPeerID + " is UNCHOKED by Peer " + remotePeerID);
                         peerProcess.remotePeerDetailsMap.get(remotePeerID).setPeerState(14);
@@ -245,65 +229,35 @@ public class PeerMessageProcessingHandler implements Runnable {
         }
     }
 
-    /**
-     * This method is used to send DOWNLOAD COMPLETE message to socket
-     *
-     * @param socket - socket in which the message to be sent
-     * @param peerID - peerID to which the message should be sent
-     */
     private void sendDownloadCompleteMessage(Socket socket, String peerID) {
         logAndShowInConsole(currentPeerID + " sending a DOWNLOAD COMPLETE message to Peer " + peerID);
-        Message message = new Message(MessageConstants.MESSAGE_DOWNLOADED);
+        Message message = new Message(Message.MessageConstants.MESSAGE_DOWNLOADED);
         byte[] messageInBytes = Message.convertMessageToByteArray(message);
         sendMessageToSocket(socket, messageInBytes);
     }
 
-    /**
-     * This method is used to send HAVE message to socket
-     *
-     * @param socket - socket in which the message to be sent
-     * @param peerID - peerID to which the message should be sent
-     */
     private void sendHaveMessage(Socket socket, String peerID) {
         //logAndShowInConsole(peer.peerProcess.currentPeerID + " sending HAVE message to Peer " + peerID);
         byte[] bitFieldInBytes = peerProcess.bitFieldMessage.getBytes();
-        Message message = new Message(MessageConstants.MESSAGE_HAVE, bitFieldInBytes);
+        Message message = new Message(Message.MessageConstants.MESSAGE_HAVE, bitFieldInBytes);
         sendMessageToSocket(socket, Message.convertMessageToByteArray(message));
 
-        bitFieldInBytes = null;
     }
 
-    /**
-     * This method is used to check remote peer is interested to receive messages
-     *
-     * @param remotePeerDetails - Peer to be checked
-     * @return true - peer interested; false peer not interested
-     */
+
     private boolean hasPeerInterested(RemotePeerDetails remotePeerDetails) {
         return remotePeerDetails.getIsComplete() == 0 &&
                 remotePeerDetails.getIsChoked() == 0 && remotePeerDetails.getIsInterested() == 1;
     }
 
-    /**
-     * This method is used to get the index of first piece different from current piece
-     *
-     * @param peerID - peerID of the remote host
-     * @return index of the first different piece
-     */
+
     private int getFirstDifferentPieceIndex(String peerID) {
         return peerProcess.bitFieldMessage.getFirstDifferentPieceIndex(peerProcess.remotePeerDetailsMap.get(peerID).getBitFieldMessage());
     }
 
-    /**
-     * This method is used to send REQUEST message to socket
-     *
-     * @param socket       - socket in which the message to be sent
-     * @param pieceIndex   - index of the piece to be requested
-     * @param remotePeerID - peerID to which the message should be sent
-     */
     private void sendRequestMessage(Socket socket, int pieceIndex, String remotePeerID) {
         logAndShowInConsole(peerProcess.currentPeerID + " sending REQUEST message to Peer " + remotePeerID + " for piece " + pieceIndex);
-        int pieceIndexLength = MessageConstants.PIECE_INDEX_LENGTH;
+        int pieceIndexLength = Message.MessageConstants.PIECE_INDEX_LENGTH;
         byte[] pieceInBytes = new byte[pieceIndexLength];
         for (int i = 0; i < pieceIndexLength; i++) {
             pieceInBytes[i] = 0;
@@ -311,21 +265,12 @@ public class PeerMessageProcessingHandler implements Runnable {
 
         byte[] pieceIndexInBytes = PeerProcessUtils.convertIntToByteArray(pieceIndex);
         System.arraycopy(pieceIndexInBytes, 0, pieceInBytes, 0, pieceIndexInBytes.length);
-        Message message = new Message(MessageConstants.MESSAGE_REQUEST, pieceIndexInBytes);
+        Message message = new Message(Message.MessageConstants.MESSAGE_REQUEST, pieceIndexInBytes);
         sendMessageToSocket(socket, Message.convertMessageToByteArray(message));
 
-        pieceInBytes = null;
-        pieceIndexInBytes = null;
-        message = null;
     }
 
-    /**
-     * This method is used to send File piece to socket
-     *
-     * @param socket       - socket in which the message to be sent
-     * @param message      - message to be sent
-     * @param remotePeerID - peerID to which the message should be sent
-     */
+
     private void sendFilePiece(Socket socket, Message message, String remotePeerID) {
         byte[] pieceIndexInBytes = message.getPayload();
         int pieceIndex = PeerProcessUtils.convertByteArrayToInt(pieceIndexInBytes);
@@ -340,111 +285,67 @@ public class PeerMessageProcessingHandler implements Runnable {
             randomAccessFile.seek(pieceIndex * pieceSize);
             numberOfBytesRead = randomAccessFile.read(bytesRead, 0, pieceSize);
 
-            byte[] buffer = new byte[numberOfBytesRead + MessageConstants.PIECE_INDEX_LENGTH];
-            System.arraycopy(pieceIndexInBytes, 0, buffer, 0, MessageConstants.PIECE_INDEX_LENGTH);
-            System.arraycopy(bytesRead, 0, buffer, MessageConstants.PIECE_INDEX_LENGTH, numberOfBytesRead);
+            byte[] buffer = new byte[numberOfBytesRead + Message.MessageConstants.PIECE_INDEX_LENGTH];
+            System.arraycopy(pieceIndexInBytes, 0, buffer, 0, Message.MessageConstants.PIECE_INDEX_LENGTH);
+            System.arraycopy(bytesRead, 0, buffer, Message.MessageConstants.PIECE_INDEX_LENGTH, numberOfBytesRead);
 
-            Message messageToBeSent = new Message(MessageConstants.MESSAGE_PIECE, buffer);
+            Message messageToBeSent = new Message(Message.MessageConstants.MESSAGE_PIECE, buffer);
             sendMessageToSocket(socket, Message.convertMessageToByteArray(messageToBeSent));
             randomAccessFile.close();
 
         } catch (IOException e) {
-
+            System.out.println(e);
         }
     }
 
-    /**
-     * This method is used if remote peer is not a preferred neighbor or optimistically unchoked neighbor.
-     *
-     * @param remotePeerId - peerID to be checked
-     * @return true - remote peer is not preferred neighbor or optimistically unchoked neighbor;
-     * false - remote peer is preferred neighbor or optimistically unchoked neighbor
-     */
     private boolean isNotPreferredAndUnchokedNeighbour(String remotePeerId) {
         return !peerProcess.preferredNeighboursMap.containsKey(remotePeerId) && !peerProcess.optimisticUnchokedNeighbors.containsKey(remotePeerId);
     }
 
-    /**
-     * This method is used to send CHOKE message to socket
-     *
-     * @param socket       - socket in which the message to be sent
-     * @param remotePeerID - peerID to which the message should be sent
-     */
     private void sendChokedMessage(Socket socket, String remotePeerID) {
         logAndShowInConsole(currentPeerID + " sending a CHOKE message to Peer " + remotePeerID);
-        Message message = new Message(MessageConstants.MESSAGE_CHOKE);
+        Message message = new Message(Message.MessageConstants.MESSAGE_CHOKE);
         byte[] messageInBytes = Message.convertMessageToByteArray(message);
         sendMessageToSocket(socket, messageInBytes);
     }
 
-    /**
-     * This method is used to send UNCHOKE message to socket
-     *
-     * @param socket       - socket in which the message to be sent
-     * @param remotePeerID - peerID to which the message should be sent
-     */
     private void sendUnChokedMessage(Socket socket, String remotePeerID) {
         logAndShowInConsole(currentPeerID + " sending a UNCHOKE message to Peer " + remotePeerID);
-        Message message = new Message(MessageConstants.MESSAGE_UNCHOKE);
+        Message message = new Message(Message.MessageConstants.MESSAGE_UNCHOKE);
         byte[] messageInBytes = Message.convertMessageToByteArray(message);
         sendMessageToSocket(socket, messageInBytes);
     }
 
-    /**
-     * This method is used to send NOT INTERESTED message to socket
-     *
-     * @param socket       - socket in which the message to be sent
-     * @param remotePeerID - peerID to which the message should be sent
-     */
     private void sendNotInterestedMessage(Socket socket, String remotePeerID) {
         logAndShowInConsole(currentPeerID + " sending a NOT INTERESTED message to Peer " + remotePeerID);
-        Message message = new Message(MessageConstants.MESSAGE_NOT_INTERESTED);
+        Message message = new Message(Message.MessageConstants.MESSAGE_NOT_INTERESTED);
         byte[] messageInBytes = Message.convertMessageToByteArray(message);
         sendMessageToSocket(socket, messageInBytes);
     }
 
-    /**
-     * This method is used to send INTERESTED message to socket
-     *
-     * @param socket       - socket in which the message to be sent
-     * @param remotePeerID - peerID to which the message should be sent
-     */
     private void sendInterestedMessage(Socket socket, String remotePeerID) {
         logAndShowInConsole(currentPeerID + " sending an INTERESTED message to Peer " + remotePeerID);
-        Message message = new Message(MessageConstants.MESSAGE_INTERESTED);
+        Message message = new Message(Message.MessageConstants.MESSAGE_INTERESTED);
         byte[] messageInBytes = Message.convertMessageToByteArray(message);
         sendMessageToSocket(socket, messageInBytes);
     }
 
-    /**
-     * This method is used to send BITFIELD message to socket
-     *
-     * @param socket       - socket in which the message to be sent
-     * @param remotePeerID - peerID to which the message should be sent
-     */
     private void sendBitFieldMessage(Socket socket, String remotePeerID) {
         logAndShowInConsole(currentPeerID + " sending a BITFIELD message to Peer " + remotePeerID);
         byte[] bitFieldMessageInByteArray = peerProcess.bitFieldMessage.getBytes();
-        Message message = new Message(MessageConstants.MESSAGE_BITFIELD, bitFieldMessageInByteArray);
+        Message message = new Message(Message.MessageConstants.MESSAGE_BITFIELD, bitFieldMessageInByteArray);
         byte[] messageInBytes = Message.convertMessageToByteArray(message);
         sendMessageToSocket(socket, messageInBytes);
 
     }
 
-    /**
-     * This method is used to check if a peer is interested to receive messages.
-     *
-     * @param message      - message to be checked
-     * @param remotePeerID - peerID to which the message should be sent
-     * @return true - peer interested; false - peer not interested
-     */
     private boolean isPeerInterested(Message message, String remotePeerID) {
         boolean peerInterested = false;
         BitFieldMessage bitField = BitFieldMessage.decodeMessage(message.getPayload());
         peerProcess.remotePeerDetailsMap.get(remotePeerID).setBitFieldMessage(bitField);
         int pieceIndex = peerProcess.bitFieldMessage.getInterestingPieceIndex(bitField);
         if (pieceIndex != -1) {
-            if (message.getType().equals(MessageConstants.MESSAGE_HAVE))
+            if (message.getType().equals(Message.MessageConstants.MESSAGE_HAVE))
                 logAndShowInConsole(currentPeerID + " received HAVE message from Peer " + remotePeerID + " for piece " + pieceIndex);
             peerInterested = true;
         }
@@ -452,12 +353,6 @@ public class PeerMessageProcessingHandler implements Runnable {
         return peerInterested;
     }
 
-    /**
-     * This method is used to write a message to socket
-     *
-     * @param socket         - socket in which the message to be sent
-     * @param messageInBytes - message to be sent
-     */
     private void sendMessageToSocket(Socket socket, byte[] messageInBytes) {
         try {
             OutputStream out = socket.getOutputStream();
@@ -466,11 +361,6 @@ public class PeerMessageProcessingHandler implements Runnable {
         }
     }
 
-    /**
-     * This method is used to log a message in a log file and show it in console
-     *
-     * @param message - message to be logged and showed in console
-     */
     private static void logAndShowInConsole(String message) {
         LogHelper.logAndShowInConsole(message);
     }

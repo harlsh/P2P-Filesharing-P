@@ -1,7 +1,6 @@
-package peer;
+package server;
 
-import logging.LogHelper;
-import message.PeerMessageHandler;
+import peer.peerProcess;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -20,20 +19,11 @@ public class PeerServerHandler implements Runnable {
     //Remote peer thread
     private Thread otherPeerThread;
 
-    /**
-     * Constructor to initialize File Server class with server socket and peerID of current peer
-     * @param serverSocket - socket of File server
-     * @param peerID - peerID of the current peer
-     */
     public PeerServerHandler(ServerSocket serverSocket, String peerID) {
         this.serverSocket = serverSocket;
         this.peerID = peerID;
     }
 
-    /**
-     * This method is run everytime FileServer Thread starts. It accepts incoming socket connections
-     * and starts threads to process messages.
-     */
     @Override
     public void run() {
         while(true) {
@@ -50,11 +40,4 @@ public class PeerServerHandler implements Runnable {
         }
     }
 
-    /**
-     * This method is used to log a message in a log file and show it in console
-     * @param message - message to be logged and showed in console
-     */
-    private static void logAndShowInConsole(String message) {
-        LogHelper.logAndShowInConsole(message);
-    }
 }

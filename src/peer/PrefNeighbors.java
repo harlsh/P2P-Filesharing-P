@@ -3,7 +3,6 @@ package peer;
 import config.CommonConfiguration;
 import logging.LogHelper;
 import message.Message;
-import message.MessageConstants;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -105,7 +104,7 @@ public class PrefNeighbors extends TimerTask {
      */
     private static void sendUnChokedMessage(Socket socket, String remotePeerID) {
         logAndShowInConsole(peerProcess.currentPeerID + " sending a UNCHOKE message to Peer " + remotePeerID);
-        Message message = new Message(MessageConstants.MESSAGE_UNCHOKE);
+        Message message = new Message(Message.MessageConstants.MESSAGE_UNCHOKE);
         SendMessageToSocket(socket, Message.convertMessageToByteArray(message));
     }
 
@@ -118,7 +117,7 @@ public class PrefNeighbors extends TimerTask {
     private void sendHaveMessage(Socket socket, String peerID) {
         logAndShowInConsole(peer.peerProcess.currentPeerID + " sending HAVE message to Peer " + peerID);
         byte[] bitFieldInBytes = peerProcess.bitFieldMessage.getBytes();
-        Message message = new Message(MessageConstants.MESSAGE_HAVE, bitFieldInBytes);
+        Message message = new Message(Message.MessageConstants.MESSAGE_HAVE, bitFieldInBytes);
         SendMessageToSocket(socket, Message.convertMessageToByteArray(message));
     }
 
