@@ -107,6 +107,6 @@ public class OptimisticallyUnchockedNeighbors extends TimerTask {
      * @param message - message to be logged and showed in console
      */
     private static void logAndShowInConsole(String message) {
-        LogHelper.logAndShowInConsole(message);
+        LogHelper.logAndPrint(message);
     }
 }

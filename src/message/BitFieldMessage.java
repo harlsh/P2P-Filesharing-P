@@ -192,6 +192,6 @@ public class BitFieldMessage {
     }
 
     private static void logAndShowInConsole(String message) {
-        LogHelper.logAndShowInConsole(message);
+        LogHelper.logAndPrint(message);
     }
 }

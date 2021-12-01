@@ -3,6 +3,7 @@ package peer;
 import config.CommonConfiguration;
 import logging.LogHelper;
 import message.BitFieldMessage;
+import message.MessageDetails;
 import server.PeerMessageHandler;
 import server.PeerMessageProcessingHandler;
 import server.PeerServerHandler;
@@ -21,49 +22,32 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * This class is used to implement the P2P process to transfer file from peer to peer.
  */
 @SuppressWarnings({"deprecation", "unchecked"})
 public class peerProcess {
-    //File server thread
     public Thread serverThread;
-    //File server socket
-    public ServerSocket serverSocket = null;
-    //peerID of the current host
+    public static boolean isFirstPeer;
     public static String currentPeerID;
-    //index of the current peer
     public static int peerIndex;
-    //Flag to check if current peer has the peer having file initially
-    public static boolean isFirstPeer = false;
-    //port of the current peer
+    public static BitFieldMessage bitFieldMessage;
     public static int currentPeerPort;
-    //Flag to check if current peer has the peer has file
     public static int currentPeerHasFile;
-    //Bitfield of the current file
-    public static BitFieldMessage bitFieldMessage = null;
-    //Message processing thread
+    public static boolean isDownloadComplete;
     public static Thread messageProcessor;
-    //Flag to check if file download is complete
-    public static boolean isDownloadComplete = false;
-    //File receiver threads list
+    public static volatile ConcurrentLinkedQueue<MessageDetails> messageQueue = new ConcurrentLinkedQueue<>();
     public static Vector<Thread> peerThreads = new Vector();
-    //File server threads list
     public static Vector<Thread> serverThreads = new Vector();
-    //Timer to schedule determination of preferred neighbors
     public static volatile Timer timerPreferredNeighbors;
-    //Timer to schedule determination of optimistically unchoked neighbors
     public static volatile Timer timerOptimisticUnchokedNeighbors;
-    //Map to store remote peer details
     public static volatile ConcurrentHashMap<String, RemotePeerDetails> remotePeerDetailsMap = new ConcurrentHashMap();
-    //Map to store preferred neighbors
     public static volatile ConcurrentHashMap<String, RemotePeerDetails> preferredNeighboursMap = new ConcurrentHashMap();
-    //Map to store peer sockets
     public static volatile ConcurrentHashMap<String, Socket> peerToSocketMap = new ConcurrentHashMap();
-    //Map to store optimistically unchoked neighbors
     public static volatile ConcurrentHashMap<String, RemotePeerDetails> optimisticUnchokedNeighbors = new ConcurrentHashMap();
-
+    public ServerSocket serverSocket;
     /**
      * This method is used to get server thread
      * @return server thread
@@ -90,52 +74,34 @@ public class peerProcess {
         currentPeerID = args[0];
 
         try {
-            //initialize logger and show started message in log file and console
             LogHelper logHelper = new LogHelper();
             logHelper.initializeLogger(currentPeerID);
-            logAndShowInConsole(currentPeerID + " is started");
+            logAndPrint(currentPeerID + " is started");
 
-            //initialize peer, its neighbors, its preferred neighbors configuration configuration
             initializeConfiguration();
-
-            //check if current peer is first peer(i.e, it initially has file)
             setCurrentPeerDetails();
-
-            //initializing current peer bitfield information
             initializeBitFieldMessage();
 
-            //starting the message processing thread
             startMessageProcessingThread(process);
-
-            //starting the file server thread and file threads
             startFileServerReceiverThreads(process);
 
-            //update preferred neighbors list
             determinePreferredNeighbors(); // ryan
-
-            //update optimistically unchoked neighbor list
             determineOptimisticallyUnchockedNeighbours(); // ryan
 
-            //if all the peers have completed downloading the file i.e, all entries in peerinfo.cfg update to 1 terminate current peer
             terminatePeer(process);
 
         } catch (Exception e) {
         } finally {
-            logAndShowInConsole(currentPeerID + " Peer process is exiting..");
+            logAndPrint(currentPeerID + " Peer process is exiting..");
             System.exit(0);
         }
     }
 
-    /**
-     * This method is used to terminate peerprocess if all the peers have downloaded the files.
-     * It terminates all the threads related to the peerprocess.
-     * @param process - peerprocess to terminate
-     */
     private static void terminatePeer(peerProcess process) {
         while (true) {
             isDownloadComplete = hasDownloadCompleted();
             if (isDownloadComplete) {
-                logAndShowInConsole("All peers have completed downloading the file.");
+                logAndPrint("All peers have completed downloading the file.");
                 timerPreferredNeighbors.cancel();
                 timerOptimisticUnchokedNeighbors.cancel();
 
@@ -177,34 +143,21 @@ public class peerProcess {
         }
     }
 
-    /**
-     * This method is used to initialze bitfield of the current peer
-     */
     public static void initializeBitFieldMessage() {
         bitFieldMessage = new BitFieldMessage();
         bitFieldMessage.setPieceDetails(currentPeerID, currentPeerHasFile);
     }
 
-    /**
-     * This method is used to start file server and file receiver threads
-     * @param process - peerprrocess to start threads into
-     */
     public static void startFileServerReceiverThreads(peerProcess process) {
         if (isFirstPeer) {
-            //Peer having file initially. starting server thread
             startFileServerThread(process);
         } else {
-            //if not a peer which has file initially. Create an empty new file. Starting serving and listening threads
             createNewFile();
             startFileReceiverThreads(process);
             startFileServerThread(process);
         }
     }
 
-    /**
-     * This method is used to start file receiver threads
-     * @param process - peerprrocess to start threads into
-     */
     public static void startFileReceiverThreads(peerProcess process) {
         Set<String> remotePeerDetailsKeys = remotePeerDetailsMap.keySet();
         for (String peerID : remotePeerDetailsKeys) {
@@ -221,10 +174,6 @@ public class peerProcess {
         }
     }
 
-    /**
-     * This method is used to start file server thread
-     * @param process - peerprrocess to start thread into
-     */
     public static void startFileServerThread(peerProcess process) {
         try {
             //Start a new file server thread
@@ -232,7 +181,7 @@ public class peerProcess {
             process.serverThread = new Thread(new PeerServerHandler(process.serverSocket, currentPeerID));
             process.serverThread.start();
         } catch (SocketTimeoutException e) {
-            logAndShowInConsole(currentPeerID + " Socket Gets Timed out Error - " + e.getMessage());
+            logAndPrint(currentPeerID + " Socket Gets Timed out Error - " + e.getMessage());
             e.printStackTrace();
             System.exit(0);
         } catch (IOException e) {
@@ -241,9 +190,6 @@ public class peerProcess {
         }
     }
 
-    /**
-     * This process to used to set current peer details
-     */
     public static void setCurrentPeerDetails() {
         final RemotePeerDetails remotePeerDetails = remotePeerDetailsMap.get(currentPeerID);
         currentPeerPort = Integer.parseInt(remotePeerDetails.getPort());
@@ -255,19 +201,9 @@ public class peerProcess {
 
     }
 
-    /**
-     * This method is used to initialize peer configuration and other peer details. It also sets preferred neighbors
-     * @throws Exception
-     */
     public static void initializeConfiguration() throws Exception {
-
-        //read Common.cfg
         initializePeerConfiguration();
-
-        //read Peerinfo.cfg
         addOtherPeerDetails();
-
-        //initialize preferred neighbours
         setPreferredNeighbours();
 
     }
@@ -318,7 +254,7 @@ public class peerProcess {
                 os.write(b);
             os.close();
         } catch (Exception e) {
-            logAndShowInConsole(currentPeerID + " ERROR in creating the file : " + e.getMessage());
+            logAndPrint(currentPeerID + " ERROR in creating the file : " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -407,8 +343,8 @@ public class peerProcess {
      * This method is used to log a message in a log file and show it in console
      * @param message - message to be logged and showed in console
      */
-    private static void logAndShowInConsole(String message) {
-        LogHelper.logAndShowInConsole(message);
+    private static void logAndPrint(String message) {
+        LogHelper.logAndPrint(message);
     }
 
     /**

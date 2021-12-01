@@ -167,7 +167,7 @@ public class Message {
 
             payLoad = null;
         } catch (Exception e) {
-            LogHelper.logAndShowInConsole(e.toString());
+            LogHelper.logAndPrint(e.toString());
             msg = null;
         }
         return msg;
@@ -194,7 +194,7 @@ public class Message {
     }
 
     private static void logAndShowInConsole(String message) {
-        LogHelper.logAndShowInConsole(message);
+        LogHelper.logAndPrint(message);
     }
 
     public static class MessageConstants {

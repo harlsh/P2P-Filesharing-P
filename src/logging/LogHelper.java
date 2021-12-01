@@ -24,7 +24,7 @@ public class LogHelper {
         }
     }
 
-    public static void logAndShowInConsole(String message) {
+    public static void logAndPrint(String message) {
         log.info(message);
         System.out.println(LogFormatter.getFormattedMessage(message));
     }

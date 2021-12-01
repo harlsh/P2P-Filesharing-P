@@ -58,7 +58,6 @@ public class HandshakeMessage {
                         handshakeMessage.getPeerIDInBytes().length);
         } catch (Exception e) {
             handshakeMessageInBytes = null;
-
         }
 
         return handshakeMessageInBytes;
@@ -129,6 +128,6 @@ public class HandshakeMessage {
     }
 
     private static void logAndShowInConsole(String message) {
-        LogHelper.logAndShowInConsole(message);
+        LogHelper.logAndPrint(message);
     }
 }

@@ -10,13 +10,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.concurrent.ConcurrentLinkedQueue;
+
+import static peer.peerProcess.messageQueue;
 
 /**
  * This class is used to write/read messages from socket
  */
 public class PeerMessageHandler implements Runnable {
-    public static ConcurrentLinkedQueue<MessageDetails> messageDetailsConcurrentLinkedQueue;
     private int connType;
     String ownPeerId;
     String remotePeerId;
@@ -32,7 +32,7 @@ public class PeerMessageHandler implements Runnable {
             peerSocket = new Socket(address, port);
             socketInputStream = peerSocket.getInputStream();
             socketOutputStream = peerSocket.getOutputStream();
-            messageDetailsConcurrentLinkedQueue = new ConcurrentLinkedQueue<>();
+
 
         } catch (IOException e) {
         }
@@ -51,7 +51,7 @@ public class PeerMessageHandler implements Runnable {
     }
 
     private static void logAndPrint(String message) {
-        LogHelper.logAndShowInConsole(message);
+        LogHelper.logAndPrint(message);
     }
 
     @Override
@@ -131,14 +131,14 @@ public class PeerMessageHandler implements Runnable {
                         messageType.equals(Message.MessageConstants.MESSAGE_CHOKE) || messageType.equals(Message.MessageConstants.MESSAGE_UNCHOKE)) {
                     messageDetails.setMessage(message);
                     messageDetails.setFromPeerID(remotePeerId);
-                    messageDetailsConcurrentLinkedQueue.add(messageDetails);
+                    messageQueue.add(messageDetails);
                 } else if (messageType.equals(Message.MessageConstants.MESSAGE_DOWNLOADED)) {
                     messageDetails.setMessage(message);
                     messageDetails.setFromPeerID(remotePeerId);
                     int peerState = peerProcess.remotePeerDetailsMap.get(remotePeerId).getPeerState();
                     peerProcess.remotePeerDetailsMap.get(remotePeerId).setPreviousPeerState(peerState);
                     peerProcess.remotePeerDetailsMap.get(remotePeerId).setPeerState(15);
-                    messageDetailsConcurrentLinkedQueue.add(messageDetails);
+                    messageQueue.add(messageDetails);
                 } else {
                     int bytesAlreadyRead = 0;
                     int bytesRead;
@@ -157,8 +157,7 @@ public class PeerMessageHandler implements Runnable {
                     Message dataMsgWithPayload = Message.convertByteArrayToMessage(dataBuffWithPayload);
                     messageDetails.setMessage(dataMsgWithPayload);
                     messageDetails.setFromPeerID(remotePeerId);
-
-                    messageDetailsConcurrentLinkedQueue.add(messageDetails);
+                    messageQueue.add(messageDetails);
                 }
             }
 
