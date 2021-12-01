@@ -41,7 +41,6 @@ public class OptimisticallyUnchockedNeighbors extends TimerTask {
             //randomize the list and get the first element from it.
             Collections.shuffle(remotePeerDetailsVector);
             RemotePeerDetails remotePeerDetails = remotePeerDetailsVector.firstElement();
-            remotePeerDetails.setIsOptimisticallyUnchockedNeighbor(1);
             peerProcess.optimisticUnchokedNeighbors.put(remotePeerDetails.getId(), remotePeerDetails);
             logAndShowInConsole(peerProcess.currentPeerID + " has the optimistically unchoked neighbor " + remotePeerDetails.getId());
 

@@ -7,7 +7,6 @@ import peer.peerProcess;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.Arrays;
 
 public class BitFieldMessage {
 
@@ -17,14 +16,18 @@ public class BitFieldMessage {
     public BitFieldMessage() {
         Double fileSize = Double.parseDouble(String.valueOf(CommonConfiguration.fileSize));
         Double pieceSize = Double.parseDouble(String.valueOf(CommonConfiguration.pieceSize));
-        numberOfPieces = (int) Math.ceil(fileSize / pieceSize);
+        numberOfPieces = (int) Math.ceil((double) fileSize / (double) pieceSize);
         filePieces = new FilePiece[numberOfPieces];
-        Arrays.fill(filePieces, new FilePiece());
+
+        for (int i = 0; i < numberOfPieces; i++) {
+            filePieces[i] = new FilePiece();
+        }
     }
 
     public FilePiece[] getFilePieces() {
         return filePieces;
     }
+
 
     public int getNumberOfPieces() {
         return numberOfPieces;
@@ -38,30 +41,30 @@ public class BitFieldMessage {
     }
 
     public byte[] getBytes() {
-        int s = numberOfPieces >> 3;
+        int s = numberOfPieces / 8;
         if (numberOfPieces % 8 != 0)
             s = s + 1;
         byte[] iP = new byte[s];
         int tempInt = 0;
         int count = 0;
-        int cnt;
-        for (cnt = 1; cnt <= numberOfPieces; cnt++) {
-            int tempP = filePieces[cnt - 1].getIsPresent();
+        int Cnt;
+        for (Cnt = 1; Cnt <= numberOfPieces; Cnt++) {
+            int tempP = filePieces[Cnt - 1].getIsPresent();
             tempInt = tempInt << 1;
             if (tempP == 1) {
                 tempInt = tempInt + 1;
             } else
                 tempInt = tempInt + 0;
 
-            if (cnt % 8 == 0 && cnt != 0) {
+            if (Cnt % 8 == 0 && Cnt != 0) {
                 iP[count] = (byte) tempInt;
                 count++;
                 tempInt = 0;
             }
 
         }
-        if ((cnt - 1) % 8 != 0) {
-            int tempShift = ((numberOfPieces) - (numberOfPieces >> 3) * 8);
+        if ((Cnt - 1) % 8 != 0) {
+            int tempShift = ((numberOfPieces) - (numberOfPieces / 8) * 8);
             tempInt = tempInt << (8 - tempShift);
             iP[count] = (byte) tempInt;
         }
@@ -97,7 +100,6 @@ public class BitFieldMessage {
 
         return count;
     }
-
 
     public boolean isFileDownloadComplete() {
         boolean isFileDownloaded = true;
@@ -177,12 +179,12 @@ public class BitFieldMessage {
                     peerProcess.remotePeerDetailsMap.get(peerID).setIsInterested(0);
                     peerProcess.remotePeerDetailsMap.get(peerID).setIsComplete(1);
                     peerProcess.remotePeerDetailsMap.get(peerID).setIsChoked(0);
-                    peerProcess.remotePeerDetailsMap.get(peerID).updatePeerDetailsHasFile(peerProcess.currentPeerID, 1);
+                    peerProcess.remotePeerDetailsMap.get(peerID).updatePeerDetails(peerProcess.currentPeerID, 1);
                     logAndShowInConsole(peerProcess.currentPeerID + " has DOWNLOADED the complete file.");
                 }
             }
         } catch (IOException e) {
-            logAndShowInConsole(peerProcess.currentPeerID + " ERROR in updating bitfield " + e.getMessage());
+            logAndShowInConsole(peerProcess.currentPeerID + " EROR in updating bitfield " + e.getMessage());
             e.printStackTrace();
         }
     }

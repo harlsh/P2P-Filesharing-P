@@ -101,7 +101,6 @@ public class PrefNeighbors extends TimerTask {
 
                 String peerId = peerDetail.getId();
 
-                peerProcess.remotePeerDetailsMap.get(peerId).setIsPreferredNeighbor(1);
                 peerProcess.preferredNeighboursMap.put(
                         peerId,
                         peerDetail
@@ -132,7 +131,6 @@ public class PrefNeighbors extends TimerTask {
                         if (!peerProcess.preferredNeighboursMap.containsKey(key)) {
                             preferredNeighbors.append(key).append(",");
                             peerProcess.preferredNeighboursMap.put(key, peerProcess.remotePeerDetailsMap.get(key));
-                            peerProcess.remotePeerDetailsMap.get(key).setIsPreferredNeighbor(1);
                         }
                         if (remotePeerDetails.getIsChoked() == 1) {
                             sendUnChokedMessage(peerProcess.peerToSocketMap.get(key), key);

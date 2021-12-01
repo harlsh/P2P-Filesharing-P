@@ -3,8 +3,8 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 import peer.RemotePeerDetails;
 
-
 import java.io.ByteArrayOutputStream;
+import java.io.Console;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -53,16 +53,18 @@ public class StartRemotePeers {
             System.out.println("path: " + path);
 
             Scanner scanner = new Scanner(System.in);
+            Console console = System.console();
             System.out.print("Enter username: ");
             String username = scanner.next();
 
             System.out.println();
             System.out.print("Enter password: ");
-            String password = scanner.next();
 
+//            String password = scanner.next();
+            String password = new String(console.readPassword());
             // start clients at remote hosts
             for (int i = 0; i < myStart.peerInfoVector.size(); i++) {
-                RemotePeerDetails pInfo = (RemotePeerDetails) myStart.peerInfoVector.elementAt(i);
+                RemotePeerDetails pInfo = myStart.peerInfoVector.elementAt(i);
 
                 System.out.println("Start remote peer " + pInfo.getId() + " at " + pInfo.getHostAddress());
 
