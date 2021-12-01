@@ -67,7 +67,7 @@ public class PrefNeighbors extends TimerTask {
 
             // if peer A has the complete file, it determine preferred neighbors randomly among those
             // that are interested in its data rather than comparing downloading rates.
-            if (peerProcess.remotePeerDetailsMap.get(peerProcess.currentPeerID).getIsComplete())
+            if (peerProcess.remotePeerDetailsMap.get(peerProcess.currentPeerID).getIsComplete()==1)
                 Collections.shuffle(interestedPeerDetailsInArray);
             else
                 Collections.sort(interestedPeerDetailsInArray, (a, b) -> a.compareTo(b));
@@ -125,7 +125,7 @@ public class PrefNeighbors extends TimerTask {
                 }
             }
         }
-        if (preferredNeighborsInString.length())
+        if (preferredNeighborsInString.length()!=0)
             logAndShowInConsole(peerProcess.currentPeerID + " has selected the preferred neighbors - " + preferredNeighborsInString.toString());
     }
 }
