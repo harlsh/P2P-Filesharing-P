@@ -298,7 +298,7 @@ public class PeerMessageProcessingHandler implements Runnable {
                         long totalTime = peerProcess.remotePeerDetailsMap.get(remotePeerID).getEndTime().getTime()
                                 - peerProcess.remotePeerDetailsMap.get(remotePeerID).getStartTime().getTime();
                         double dataRate = ((double) (payloadInBytes.length + Message.MessageConstants.MESSAGE_LENGTH + Message.MessageConstants.MESSAGE_TYPE) / (double) totalTime) * 100;
-                        peerProcess.remotePeerDetailsMap.get(remotePeerID).setDataRate(dataRate);
+                        peerProcess.remotePeerDetailsMap.get(remotePeerID).setDownloadRate(dataRate);
                         FilePiece filePiece = FilePieceDelegate.convertByteArrayToFilePiece(payloadInBytes);
                         //update the piece information in current peer bitfield
                         peerProcess.bitFieldMessage.updateBitFieldInformation(remotePeerID, filePiece);
@@ -355,7 +355,7 @@ public class PeerMessageProcessingHandler implements Runnable {
                 } else if (peerState == 15) {
                     try {
                         //update neighbor details after it gets file completely
-                        peerProcess.remotePeerDetailsMap.get(peerProcess.currentPeerID).updatePeerDetails(remotePeerID, 1);
+                        peerProcess.remotePeerDetailsMap.get(peerProcess.currentPeerID).updatePeerDetailsHasFile(remotePeerID, 1);
                         logAndShowInConsole(remotePeerID + " has downloaded the complete file");
                         int previousState = peerProcess.remotePeerDetailsMap.get(remotePeerID).getPreviousPeerState();
                         peerProcess.remotePeerDetailsMap.get(remotePeerID).setPeerState(previousState);

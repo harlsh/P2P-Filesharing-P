@@ -177,7 +177,7 @@ public class BitFieldMessage {
                     peerProcess.remotePeerDetailsMap.get(peerID).setIsInterested(0);
                     peerProcess.remotePeerDetailsMap.get(peerID).setIsComplete(1);
                     peerProcess.remotePeerDetailsMap.get(peerID).setIsChoked(0);
-                    peerProcess.remotePeerDetailsMap.get(peerID).updatePeerDetails(peerProcess.currentPeerID, 1);
+                    peerProcess.remotePeerDetailsMap.get(peerID).updatePeerDetailsHasFile(peerProcess.currentPeerID, 1);
                     logAndShowInConsole(peerProcess.currentPeerID + " has DOWNLOADED the complete file.");
                 }
             }

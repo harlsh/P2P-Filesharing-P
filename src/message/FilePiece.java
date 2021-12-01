@@ -22,10 +22,6 @@ public class FilePiece {
     public void setIsPresent(int isPresent) {
         filePieceDelegate.setIsPresent(isPresent);
     }
-
-    public String getFromPeerID() {
-        return filePieceDelegate.getFromPeerID();
-    }
     
     public void setFromPeerID(String fromPeerID) {
         filePieceDelegate.setFromPeerID(fromPeerID);
