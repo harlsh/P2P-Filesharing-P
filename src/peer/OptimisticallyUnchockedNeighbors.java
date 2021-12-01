@@ -11,39 +11,55 @@ import java.util.Set;
 import java.util.TimerTask;
 import java.util.Vector;
 
+/**
+ * This class is used to determine optimistically unchoked neighbor from a list of choked neighbors
+ */
 public class OptimisticallyUnchockedNeighbors extends TimerTask {
 
+    /**
+     * This method runs asynchronously as part of timer task every 'CommonConfiguration.optimisticUnchokingInterval' interval.
+     * It determines optimistically unchoked neighbor at random from all the neighbors which are choked.
+     */
     @Override
     public void run() {
         peerProcess.updateOtherPeerDetails();
         peerProcess.optimisticUnchokedNeighbors.clear();
 
         List<RemotePeerDetails> interestedPeerDetailsInArray = new ArrayList();
-        for (RemotePeerDetails peerDetailObject : peerProcess.remotePeerDetailsMap.values()){
-            if (peerDetailObject.getId().equals(peerProcess.currentPeerID))
-                continue;
-            else if (  peerDetailObject.getIsComplete()==0
-                    && peerDetailObject.getIsChoked()==1
-                    && peerDetailObject.getInterested()==1){
-                interestedPeerDetailsInArray.add(peerDetailObject);
+        for (String peerId : peerProcess.remotePeerDetailsMap.keySet()) {
+            RemotePeerDetails remotePeerDetails = peerProcess.remotePeerDetailsMap.get(peerId);
+            if (peerId.equals(peerProcess.currentPeerId))
+                continue
+            else if (hasPeerInterested(remotePeerDetails)) {
+                interestedPeerDetailsInArray.add(remotePeerDetails);
             }
         }
 
-        if(interestedPeerDetailsInArray.size()>0) {
+        if(!interestedPeerDetailsInArray.isEmpty()) {
+            //randomize the list and get the first element from it.
             Collections.shuffle(interestedPeerDetailsInArray);
-            RemotePeerDetails selectedPeerDeatilObject = interestedPeerDetailsInArray.firstElement();
-            String selectedPeerId = selectedPeerDeatilObject.getId();
-            peerProcess.optimisticUnchokedNeighbors.put(selectedPeerId, selectedPeerDeatilObject);
-            logAndShowInConsole(peerProcess.currentPeerID + " has the optimistically unchoked neighbor " + selectedPeerId);
+            RemotePeerDetails remotePeerDetails = interestedPeerDetailsInArray.firstElement();
+            peerProcess.optimisticUnchokedNeighbors.put(remotePeerDetails.getId(), remotePeerDetails);
+            logAndShowInConsole(peerProcess.currentPeerID + " has the optimistically unchoked neighbor " + remotePeerDetails.getId());
 
-            if(selectedPeerDeatilObject.getIsChoked() == 1) {
+            if(remotePeerDetails.getIsChoked() == 1) {
                 //send unchoke message if choked
-                peerProcess.remotePeerDetailsMap.get(selectedPeerDeatilObject.getId()).setIsChoked(0);
-                sendUnChokedMessage(peerProcess.peerToSocketMap.get(selectedPeerDeatilObject.getId()), selectedPeerDeatilObject.getId());
-                sendHaveMessage(peerProcess.peerToSocketMap.get(selectedPeerDeatilObject.getId()), selectedPeerDeatilObject.getId());
-                peerProcess.remotePeerDetailsMap.get(selectedPeerDeatilObject.getId()).setPeerState(3);
+                peerProcess.remotePeerDetailsMap.get(remotePeerDetails.getId()).setIsChoked(0);
+                sendUnChokedMessage(peerProcess.peerToSocketMap.get(remotePeerDetails.getId()), remotePeerDetails.getId());
+                sendHaveMessage(peerProcess.peerToSocketMap.get(remotePeerDetails.getId()), remotePeerDetails.getId());
+                peerProcess.remotePeerDetailsMap.get(remotePeerDetails.getId()).setPeerState(3);
             }
         }
+    }
+
+    /**
+     * This method is used to determine if the peer is interested to receive pieces
+     * @param remotePeerDetails - peer to check whether it is interested or not
+     * @return true - peer interested; false - peer not interested
+     */
+    private boolean hasPeerInterested(RemotePeerDetails remotePeerDetails) {
+        return remotePeerDetails.getIsComplete() == 0 &&
+                remotePeerDetails.getIsChoked() == 1 && remotePeerDetails.getIsInterested() == 1;
     }
 
     /**
