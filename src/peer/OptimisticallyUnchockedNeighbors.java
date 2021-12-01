@@ -6,10 +6,10 @@ import message.Message;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Set;
+import java.util.List;
 import java.util.TimerTask;
-import java.util.Vector;
 
 /**
  * This class is used to determine optimistically unchoked neighbor from a list of choked neighbors
@@ -28,8 +28,8 @@ public class OptimisticallyUnchockedNeighbors extends TimerTask {
         List<RemotePeerDetails> interestedPeerDetailsInArray = new ArrayList();
         for (String peerId : peerProcess.remotePeerDetailsMap.keySet()) {
             RemotePeerDetails remotePeerDetails = peerProcess.remotePeerDetailsMap.get(peerId);
-            if (peerId.equals(peerProcess.currentPeerId))
-                continue
+            if (peerId.equals(peerProcess.currentPeerID))
+                continue;
             else if (hasPeerInterested(remotePeerDetails)) {
                 interestedPeerDetailsInArray.add(remotePeerDetails);
             }
@@ -38,7 +38,7 @@ public class OptimisticallyUnchockedNeighbors extends TimerTask {
         if(!interestedPeerDetailsInArray.isEmpty()) {
             //randomize the list and get the first element from it.
             Collections.shuffle(interestedPeerDetailsInArray);
-            RemotePeerDetails remotePeerDetails = interestedPeerDetailsInArray.firstElement();
+            RemotePeerDetails remotePeerDetails = interestedPeerDetailsInArray.get(0);
             peerProcess.optimisticUnchokedNeighbors.put(remotePeerDetails.getId(), remotePeerDetails);
             logAndShowInConsole(peerProcess.currentPeerID + " has the optimistically unchoked neighbor " + remotePeerDetails.getId());
 

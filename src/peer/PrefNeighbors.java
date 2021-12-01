@@ -1,7 +1,6 @@
 package peer;
 
 import config.CommonConfiguration;
-import logging.LogHelper;
 import message.Message;
 
 import java.io.IOException;
@@ -12,32 +11,31 @@ import java.util.Collections;
 import java.util.List;
 import java.util.TimerTask;
 
+import static logging.LogHelper.logAndPrint;
+
 public class PrefNeighbors extends TimerTask {
 
-    private static void logAndShowInConsole(String message) {
-        LogHelper.logAndPrint(message);
-    }
 
     private static void sendUnChokedMessage(Socket socket, String remotePeerID) {
-        logAndShowInConsole(peerProcess.currentPeerID + " sending a UNCHOKE message to Peer " + remotePeerID);
+        logAndPrint(peerProcess.currentPeerID + " sending a UNCHOKE message to Peer " + remotePeerID);
         Message message = new Message(Message.MessageConstants.MESSAGE_UNCHOKE);
-        SendMessageToSocket(socket, Message.convertMessageToByteArray(message));
+        sendMessageToSocket(socket, Message.convertMessageToByteArray(message));
     }
 
-    private void sendHaveMessage(Socket socket, String peerID) {
-        logAndShowInConsole(peer.peerProcess.currentPeerID + " sending HAVE message to Peer " + peerID);
-        byte[] bitFieldInBytes = peerProcess.bitFieldMessage.getBytes();
-        Message message = new Message(Message.MessageConstants.MESSAGE_HAVE, bitFieldInBytes);
-        SendMessageToSocket(socket, Message.convertMessageToByteArray(message));
-    }
-
-    private static void SendMessageToSocket(Socket socket, byte[] messageInBytes) {
+    private static void sendMessageToSocket(Socket socket, byte[] messageInBytes) {
         try {
             OutputStream out = socket.getOutputStream();
             out.write(messageInBytes);
         } catch (IOException e) {
             System.out.println(e);
         }
+    }
+
+    private void sendHaveMessage(Socket socket, String peerID) {
+        logAndPrint(peer.peerProcess.currentPeerID + " sending HAVE message to Peer " + peerID);
+        byte[] bitFieldInBytes = peerProcess.bitFieldMessage.getBytes();
+        Message message = new Message(Message.MessageConstants.MESSAGE_HAVE, bitFieldInBytes);
+        sendMessageToSocket(socket, Message.convertMessageToByteArray(message));
     }
 
     public void run() {
@@ -47,6 +45,7 @@ public class PrefNeighbors extends TimerTask {
 
         List<RemotePeerDetails> interestedPeerDetailsInArray = new ArrayList();
         // scan through all peer
+
         for (String peerId : peerProcess.remotePeerDetailsMap.keySet()) {
             if (peerId.equals(peerProcess.currentPeerID))
                 continue;
@@ -126,6 +125,6 @@ public class PrefNeighbors extends TimerTask {
             }
         }
         if (preferredNeighborsInString.length() != 0)
-            logAndShowInConsole(peerProcess.currentPeerID + " has selected the preferred neighbors - " + preferredNeighborsInString.toString());
+            logAndPrint(peerProcess.currentPeerID + " has selected the preferred neighbors - " + preferredNeighborsInString.toString());
     }
 }
