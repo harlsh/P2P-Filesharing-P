@@ -27,7 +27,7 @@ public class OptimisticallyUnchockedNeighbors extends TimerTask {
             peerProcess.optimisticUnchokedNeighbors.clear();
         }
 
-        //Add all interested peers to a list
+        //Add all interested peers to a list remotePeerDetailsVector
         Set<String> keys = peerProcess.remotePeerDetailsMap.keySet();
         Vector<RemotePeerDetails> remotePeerDetailsVector = new Vector();
         for (String key : keys) {
@@ -49,6 +49,7 @@ public class OptimisticallyUnchockedNeighbors extends TimerTask {
                 //send unchoke message if choked
                 peerProcess.remotePeerDetailsMap.get(remotePeerDetails.getId()).setIsChoked(0);
                 sendUnChokedMessage(peerProcess.peerToSocketMap.get(remotePeerDetails.getId()), remotePeerDetails.getId());
+                // not sure why send have here
                 sendHaveMessage(peerProcess.peerToSocketMap.get(remotePeerDetails.getId()), remotePeerDetails.getId());
                 peerProcess.remotePeerDetailsMap.get(remotePeerDetails.getId()).setPeerState(3);
             }

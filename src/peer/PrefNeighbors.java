@@ -1,72 +1,76 @@
 package peer;
 
-import config.CommonConfiguration;
-import logging.LogHelper;
-import message.Message;
+        import config.CommonConfiguration;
+        import logging.LogHelper;
+        import message.Message;
+        import message.MessageConstants;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.util.*;
+        import java.io.IOException;
+        import java.io.OutputStream;
+        import java.net.Socket;
+        import java.util.*;
 
-/**
- * This class is used to determine preferred neighbors from a list of choked neighbors
- */
 public class PrefNeighbors extends TimerTask {
-    /**
-     * This method is run everytime PrefNeighbors timer task is invoked.
-     * For a peer which has file it determines preferred neighbors randomly.
-     * For a peer which doesnt have the file, It determines neighbors based to download rate of peers.
-     */
+
     public void run() {
-        int countInterested = 0;
-        StringBuilder preferredNeighbors = new StringBuilder();
-        //updates remotePeerInfo lost
-        peerProcess.updateOtherPeerDetails();
-        //
-        Set<String> remotePeerIDs = peerProcess.remotePeerDetailsMap.keySet();
-        for (String key : remotePeerIDs) {
-            RemotePeerDetails remotePeerDetails = peerProcess.remotePeerDetailsMap.get(key);
-            if (!key.equals(peerProcess.currentPeerID)) {
-                if (remotePeerDetails.getIsComplete() == 0 && remotePeerDetails.getIsInterested() == 1) {
-                    countInterested++;
-                } else if (remotePeerDetails.getIsComplete() == 1) {
-                    peerProcess.preferredNeighboursMap.remove(key);
-                }
+        StringBuilder preferredNeighbors = new StringBuilder();  // preferredNeighbors is a instance of StringBuilder for log
+        peerProcess.updateOtherPeerDetails();  //updates remotePeerInfo from PeerInfo.cfg to remotePeerDetailsMap
+
+        List<RemotePeerDetails> interestedPeerDetails = new ArrayList();
+        // scan through all peer
+        for (String peerId : peerProcess.remotePeerDetailsMap.keySet()) {
+            if (!peerId.equals(peerProcess.currentPeerId))
+                continue;
+            if (peerProcess.remotePeerDetailsMap.get(peerId).getIsComplete() == 1)
+                peerProcess.preferredNeighboursMap.remove(peerId);
+            else if (peerProcess.remotePeerDetailsMap.get(peerId).getIsComplete() == 0
+                    && peerProcess.remotePeerDetailsMap.get(peerId).getIsInterested() == 1
+                    // no need to check !peerId.equals(peerProcess.currentPeerID, since we check it in first if
+                    ) {
+                interestedPeerDetails.add(peerProcess.remotePeerDetailsMap.get(peerId));
             }
         }
 
-        if (countInterested > CommonConfiguration.numberOfPreferredNeighbours) {
-            //If there are more number of interested neighbors than needed, add the first 'CommonConfiguration.numberOfPreferredNeighbours'
-            // number of interested neighbors to preferred neighbors to list
-            if (!peerProcess.preferredNeighboursMap.isEmpty())
-                peerProcess.preferredNeighboursMap.clear();
-            List<RemotePeerDetails> pv = new ArrayList(peerProcess.remotePeerDetailsMap.values());
-            int isCompleteFilePresent = peerProcess.remotePeerDetailsMap.get(peerProcess.currentPeerID).getIsComplete();
-            if (isCompleteFilePresent == 1) {
-                Collections.shuffle(pv);
+        if (interestedPeerDetails.size() > CommonConfiguration.numberOfPreferredNeighbours) {
+
+            peerProcess.preferredNeighboursMap.clear();
+
+            // if peer A has the complete file, it determine preferred neighbors randomly among those
+            // that are interested in its data rather than comparing downloading rates.
+            if (peerProcess.remotePeerDetailsMap.get(peerProcess.currentPeerID).getIsComplete() == 1) {
+                Collections.shuffle(interestedPeerDetails);
             } else {
-                Collections.sort(pv, new DownloadRateSorter(false));
+                // harish's comparator
+                Collections.sort(interestedPeerDetails, (RemotePeerDetails a, RemotePeerDetails b) -> a.compareTo(b));
             }
-            int count = 0;
-            for (int i = 0; i < pv.size(); i++) {
-                if (count > CommonConfiguration.numberOfPreferredNeighbours - 1)
-                    break;
-                if (pv.get(i).getIsInterested() == 1 && !pv.get(i).getId().equals(peerProcess.currentPeerID)
-                        && peerProcess.remotePeerDetailsMap.get(pv.get(i).getId()).getIsComplete() == 0) {
-                    peerProcess.remotePeerDetailsMap.get(pv.get(i).getId()).setIsPreferredNeighbor(1);
-                    peerProcess.preferredNeighboursMap.put(pv.get(i).getId(), peerProcess.remotePeerDetailsMap.get(pv.get(i).getId()));
+            int countPreferredPeers = 0;
 
-                    count++;
+            // update preferredNeighboursMap and preferredNeighbors
+            for (RemotePeerDetails peerDetail: interestedPeerDetails){
 
-                    preferredNeighbors.append(pv.get(i).getId()).append(",");
-                    if (peerProcess.remotePeerDetailsMap.get(pv.get(i).getId()).getIsChoked() == 1) {
-                        sendUnChokedMessage(peerProcess.peerToSocketMap.get(pv.get(i).getId()), pv.get(i).getId());
-                        peerProcess.remotePeerDetailsMap.get(pv.get(i).getId()).setIsChoked(0);
-                        sendHaveMessage(peerProcess.peerToSocketMap.get(pv.get(i).getId()), pv.get(i).getId());
-                        peerProcess.remotePeerDetailsMap.get(pv.get(i).getId()).setPeerState(3);
-                    }
+                String peerId = peerDetail.getId();
+
+                peerProcess.remotePeerDetailsMap.get(peerId).setIsPreferredNeighbor(1);
+                peerProcess.preferredNeighboursMap.put(
+                        peerId,
+                        peerDetail
+                        // Question: can we use peerDetail directly?
+                        // like: peerDetail
+                        // original one: peerProcess.remotePeerDetailsMap.get(peerDetail.getId())
+                );
+                preferredNeighbors.append(peerId).append(",");
+
+                if (peerProcess.remotePeerDetailsMap.get(peerId).getIsChoked() == 1) {
+                    sendUnChokedMessage(peerProcess.peerToSocketMap.get(peerId), peerId);
+                    peerProcess.remotePeerDetailsMap.get(peerId).setIsChoked(0);
+                    // not sure why sending have
+                    sendHaveMessage(peerProcess.peerToSocketMap.get(peerId), peerId);
+                    peerProcess.remotePeerDetailsMap.get(peerId).setPeerState(3);
                 }
+
+                countPreferredPeers = countPreferredPeers+1;
+                if (countPreferredPeers > CommonConfiguration.numberOfPreferredNeighbours - 1)
+                    break;
             }
         } else {
             //add all the interested neighbors to list
@@ -104,7 +108,7 @@ public class PrefNeighbors extends TimerTask {
      */
     private static void sendUnChokedMessage(Socket socket, String remotePeerID) {
         logAndShowInConsole(peerProcess.currentPeerID + " sending a UNCHOKE message to Peer " + remotePeerID);
-        Message message = new Message(Message.MessageConstants.MESSAGE_UNCHOKE);
+        Message message = new Message(MessageConstants.MESSAGE_UNCHOKE);
         SendMessageToSocket(socket, Message.convertMessageToByteArray(message));
     }
 
@@ -117,7 +121,7 @@ public class PrefNeighbors extends TimerTask {
     private void sendHaveMessage(Socket socket, String peerID) {
         logAndShowInConsole(peer.peerProcess.currentPeerID + " sending HAVE message to Peer " + peerID);
         byte[] bitFieldInBytes = peerProcess.bitFieldMessage.getBytes();
-        Message message = new Message(Message.MessageConstants.MESSAGE_HAVE, bitFieldInBytes);
+        Message message = new Message(MessageConstants.MESSAGE_HAVE, bitFieldInBytes);
         SendMessageToSocket(socket, Message.convertMessageToByteArray(message));
     }
 
