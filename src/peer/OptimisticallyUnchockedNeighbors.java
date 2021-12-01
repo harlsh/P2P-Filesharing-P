@@ -34,17 +34,23 @@ public class OptimisticallyUnchockedNeighbors extends TimerTask {
             RemotePeerDetails selectedPeerDeatilObject = interestedPeerDetailsInArray.firstElement();
             String selectedPeerId = selectedPeerDeatilObject.getId();
             peerProcess.optimisticUnchokedNeighbors.put(selectedPeerId, selectedPeerDeatilObject);
-            logAndShowInConsole(peerProcess.currentPeerID + " makes the optimistically unchoked neighbor " + selectedPeerId + " now.");
+            logAndShowInConsole(peerProcess.currentPeerID + " has the optimistically unchoked neighbor " + selectedPeerId);
 
             if(selectedPeerDeatilObject.getIsChoked() == 1) {
-                selectedPeerDeatilObject.setIsChoked(0);
-                sendUnChokedMessage(peerProcess.peerToSocketMap.get(selectedPeerId), selectedPeerId);
-                sendHaveMessage(peerProcess.peerToSocketMap.get(selectedPeerId), selectedPeerId);
-                selectedPeerDeatilObject.setPeerState(3);
+                //send unchoke message if choked
+                peerProcess.remotePeerDetailsMap.get(selectedPeerDeatilObject.getId()).setIsChoked(0);
+                sendUnChokedMessage(peerProcess.peerToSocketMap.get(selectedPeerDeatilObject.getId()), selectedPeerDeatilObject.getId());
+                sendHaveMessage(peerProcess.peerToSocketMap.get(selectedPeerDeatilObject.getId()), selectedPeerDeatilObject.getId());
+                peerProcess.remotePeerDetailsMap.get(selectedPeerDeatilObject.getId()).setPeerState(3);
             }
         }
     }
 
+    /**
+     * This method is used to send UNCHOKED message to socket
+     * @param socket - socket in which the message to be sent
+     * @param remotePeerID - peerID to which the message should be sent
+     */
     private void sendUnChokedMessage(Socket socket, String remotePeerID) {
         logAndShowInConsole(peerProcess.currentPeerID + " sending a UNCHOKE message to Peer " + remotePeerID);
         Message message = new Message(Message.MessageConstants.MESSAGE_UNCHOKE);
@@ -52,6 +58,11 @@ public class OptimisticallyUnchockedNeighbors extends TimerTask {
         SendMessageToSocket(socket, messageInBytes);
     }
 
+    /**
+     * This method is used to send HAVE message to socket
+     * @param socket - socket in which the message to be sent
+     * @param peerID - peerID to which the message should be sent
+     */
     private void sendHaveMessage(Socket socket, String peerID) {
         logAndShowInConsole(peerProcess.currentPeerID + " sending HAVE message to Peer " + peerID);
         byte[] bitFieldInBytes = peerProcess.bitFieldMessage.getBytes();
@@ -59,6 +70,11 @@ public class OptimisticallyUnchockedNeighbors extends TimerTask {
         SendMessageToSocket(socket, Message.convertMessageToByteArray(message));
     }
 
+    /**
+     * This method is used to write a message to socket
+     * @param socket - socket in which the message to be sent
+     * @param messageInBytes - message to be sent
+     */
     private void SendMessageToSocket(Socket socket, byte[] messageInBytes) {
         try {
             OutputStream out = socket.getOutputStream();
@@ -67,6 +83,10 @@ public class OptimisticallyUnchockedNeighbors extends TimerTask {
         }
     }
 
+    /**
+     * This method is used to log a message in a log file and show it in console
+     * @param message - message to be logged and showed in console
+     */
     private static void logAndShowInConsole(String message) {
         LogHelper.logAndPrint(message);
     }
