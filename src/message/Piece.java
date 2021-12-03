@@ -5,10 +5,10 @@ import config.CommonConfiguration;
 /**
  * This class is used to handle file piece information
  */
-public class FilePiece {
+public class Piece {
     private final FilePieceDelegate filePieceDelegate = new FilePieceDelegate();
 
-    public FilePiece() {
+    public Piece() {
         filePieceDelegate.setContent(new byte[CommonConfiguration.pieceSize]);
         filePieceDelegate.setPieceIndex(-1);
         filePieceDelegate.setIsPresent(0);

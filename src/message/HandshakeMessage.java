@@ -45,7 +45,7 @@ public class HandshakeMessage {
             if (handshakeMessage.getZeroBits() == null ||
                     (handshakeMessage.getZeroBits().length > Message.MessageConstants.HANDSHAKE_ZEROBITS_LENGTH || handshakeMessage.getZeroBits().length == 0))
                 throw new Exception("Handshake Message Zero Bits are Invalid");
-            else
+            else//for loop / .fill
                 System.arraycopy(handshakeMessage.getZeroBits(), 0,
                         handshakeMessageInBytes, Message.MessageConstants.HANDSHAKE_HEADER_LENGTH, Message.MessageConstants.HANDSHAKE_ZEROBITS_LENGTH - 1);
 
@@ -57,7 +57,6 @@ public class HandshakeMessage {
                         Message.MessageConstants.HANDSHAKE_HEADER_LENGTH + Message.MessageConstants.HANDSHAKE_ZEROBITS_LENGTH,
                         handshakeMessage.getPeerIDInBytes().length);
         } catch (Exception e) {
-            handshakeMessageInBytes = null;
         }
 
         return handshakeMessageInBytes;

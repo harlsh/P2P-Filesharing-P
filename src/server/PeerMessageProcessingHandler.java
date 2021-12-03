@@ -157,24 +157,24 @@ public class PeerMessageProcessingHandler implements Runnable {
 
     @Override
     public void run() {
-        MessageDetails messageDetails;
+        MessageInfo messageInfo;
         Message message;
         String messageType;
         String remotePeerID;
 
         while (true) {
             //Read message from queue
-            messageDetails = messageQueue.poll();
-            while (messageDetails == null) {
+            messageInfo = messageQueue.poll();
+            while (messageInfo == null) {
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
                 }
-                messageDetails = messageQueue.poll();
+                messageInfo = messageQueue.poll();
             }
-            message = messageDetails.getMessage();
+            message = messageInfo.getMessage();
             messageType = message.getType();
-            remotePeerID = messageDetails.getFromPeerID();
+            remotePeerID = messageInfo.getFromPeerID();
             int peerState = peerProcess.remotePeerDetailsMap.get(remotePeerID).getPeerState();
 
             if (messageType.equals(Message.MessageConstants.MESSAGE_HAVE) && peerState != 14) {
@@ -284,9 +284,9 @@ public class PeerMessageProcessingHandler implements Runnable {
                                 - peerProcess.remotePeerDetailsMap.get(remotePeerID).getStartTime().getTime();
                         double dataRate = ((double) (payloadInBytes.length + Message.MessageConstants.MESSAGE_LENGTH + Message.MessageConstants.MESSAGE_TYPE) / (double) totalTime) * 100;
                         peerProcess.remotePeerDetailsMap.get(remotePeerID).setDataRate(dataRate);
-                        FilePiece filePiece = FilePieceDelegate.convertByteArrayToFilePiece(payloadInBytes);
+                        Piece piece = FilePieceDelegate.convertByteArrayToFilePiece(payloadInBytes);
                         //update the piece information in current peer bitfield
-                        peerProcess.bitFieldMessage.updateBitFieldInformation(remotePeerID, filePiece);
+                        peerProcess.bitFieldMessage.updateBitFieldInformation(remotePeerID, piece);
                         int firstDifferentPieceIndex = getFirstDifferentPieceIndex(remotePeerID);
                         if (firstDifferentPieceIndex == -1) {
                             peerProcess.remotePeerDetailsMap.get(remotePeerID).setPeerState(13);

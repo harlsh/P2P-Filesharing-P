@@ -31,11 +31,11 @@ public class Message {
                 setMessageType(messageType);
                 this.payload = null;
             } else {
-                logAndShowInConsole("Error Occurred while initialzing Message constructor");
+                logAndPrint("Error Occurred while initialzing Message constructor");
                 throw new Exception("Message Constructor - Wrong constructor selected");
             }
         } catch (Exception e) {
-            logAndShowInConsole(e.getMessage());
+            logAndPrint(e.getMessage());
         }
     }
 
@@ -44,7 +44,7 @@ public class Message {
             if (payload != null) {
                 setMessageLength(payload.length + 1);
                 if (lengthInBytes.length > MessageConstants.MESSAGE_LENGTH) {
-                    logAndShowInConsole("Error Occurred while initialzing Message constructor");
+                    logAndPrint("Error Occurred while initialzing Message constructor");
                     throw new Exception("Message Constructor - Message Length is too large");
                 }
                 setPayload(payload);
@@ -55,28 +55,22 @@ public class Message {
                     setMessageLength(1);
                     this.payload = null;
                 } else {
-                    logAndShowInConsole("Error Occurred while initialzing Message constructor");
+                    logAndPrint("Error Occurred while initialzing Message constructor");
                     throw new Exception("Message Constructor - Message Payload should not be null");
                 }
             }
             setMessageType(messageType);
             if (typeInBytes.length > MessageConstants.MESSAGE_TYPE) {
-                logAndShowInConsole("Error Occurred while initialzing Message constructor");
+                logAndPrint("Error Occurred while initialzing Message constructor");
                 throw new Exception("Message Constructor - Message Type length is too large");
             }
         } catch (Exception e) {
-            logAndShowInConsole("Error Occurred while initialzing Message constructor - " + e.getMessage());
+            logAndPrint("Error Occurred while initialzing Message constructor - " + e.getMessage());
         }
     }
 
-    public void setMessageType(String messageType) {
-        type = messageType.trim();
-        try {
-            typeInBytes = messageType.getBytes(MessageConstants.DEFAULT_CHARSET);
-        } catch (UnsupportedEncodingException e) {
-            logAndShowInConsole(e.getMessage());
-            e.printStackTrace();
-        }
+    private static void logAndPrint(String message) {
+        LogHelper.logAndPrint(message);
     }
 
     public void setMessageLength(int messageLength) {
@@ -93,12 +87,13 @@ public class Message {
         this.dataLength = l;
     }
 
-    public void setMessageType(byte[] type) {
+    public void setMessageType(String messageType) {
+        type = messageType.trim();
         try {
-            this.type = new String(type, MessageConstants.DEFAULT_CHARSET);
-            this.typeInBytes = type;
+            typeInBytes = messageType.getBytes(MessageConstants.DEFAULT_CHARSET);
         } catch (UnsupportedEncodingException e) {
-            logAndShowInConsole(e.toString());
+            logAndPrint(e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -164,8 +159,6 @@ public class Message {
                 System.arraycopy(message, MessageConstants.MESSAGE_LENGTH + MessageConstants.MESSAGE_TYPE, payLoad, 0, message.length - MessageConstants.MESSAGE_LENGTH - MessageConstants.MESSAGE_TYPE);
                 msg.setPayload(payLoad);
             }
-
-            payLoad = null;
         } catch (Exception e) {
             LogHelper.logAndPrint(e.toString());
             msg = null;
@@ -193,8 +186,13 @@ public class Message {
         this.payload = payload;
     }
 
-    private static void logAndShowInConsole(String message) {
-        LogHelper.logAndPrint(message);
+    public void setMessageType(byte[] type) {
+        try {
+            this.type = new String(type, MessageConstants.DEFAULT_CHARSET);
+            this.typeInBytes = type;
+        } catch (UnsupportedEncodingException e) {
+            logAndPrint(e.toString());
+        }
     }
 
     public static class MessageConstants {

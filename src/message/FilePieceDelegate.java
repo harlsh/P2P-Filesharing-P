@@ -11,14 +11,14 @@ public class FilePieceDelegate {
     public FilePieceDelegate() {
     }
 
-    public static FilePiece convertByteArrayToFilePiece(byte[] payloadInBytes) {
+    public static Piece convertByteArrayToFilePiece(byte[] payloadInBytes) {
         byte[] indexInBytes = new byte[Message.MessageConstants.PIECE_INDEX_LENGTH];
-        FilePiece filePiece = new FilePiece();
+        Piece piece = new Piece();
         System.arraycopy(payloadInBytes, 0, indexInBytes, 0, Message.MessageConstants.PIECE_INDEX_LENGTH);
-        filePiece.setPieceIndex(PeerProcessUtils.convertByteArrayToInt(indexInBytes));
-        filePiece.setContent(new byte[payloadInBytes.length - Message.MessageConstants.PIECE_INDEX_LENGTH]);
-        System.arraycopy(payloadInBytes, Message.MessageConstants.PIECE_INDEX_LENGTH, filePiece.getContent(), 0, payloadInBytes.length - Message.MessageConstants.PIECE_INDEX_LENGTH);
-        return filePiece;
+        piece.setPieceIndex(PeerProcessUtils.convertByteArrayToInt(indexInBytes));
+        piece.setContent(new byte[payloadInBytes.length - Message.MessageConstants.PIECE_INDEX_LENGTH]);
+        System.arraycopy(payloadInBytes, Message.MessageConstants.PIECE_INDEX_LENGTH, piece.getContent(), 0, payloadInBytes.length - Message.MessageConstants.PIECE_INDEX_LENGTH);
+        return piece;
     }
 
     public int getIsPresent() {

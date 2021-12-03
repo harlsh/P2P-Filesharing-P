@@ -1,29 +1,46 @@
 package message;
 
 import config.CommonConfiguration;
-import logging.LogHelper;
 import peer.peerProcess;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Arrays;
+import java.util.stream.Collectors;
+
+import static logging.LogHelper.logAndPrint;
 
 public class BitFieldMessage {
 
-    private FilePiece[] filePieces;
+    private Piece[] pieces;
     private int numberOfPieces;
 
     public BitFieldMessage() {
         Double fileSize = Double.parseDouble(String.valueOf(CommonConfiguration.fileSize));
         Double pieceSize = Double.parseDouble(String.valueOf(CommonConfiguration.pieceSize));
         numberOfPieces = (int) Math.ceil((double) fileSize / (double) pieceSize);
-        filePieces = new FilePiece[numberOfPieces];
-        Arrays.fill(filePieces, new FilePiece());
+        pieces = new Piece[numberOfPieces];
+        Arrays.fill(pieces, new Piece());
     }
 
-    public FilePiece[] getFilePieces() {
-        return filePieces;
+    public static BitFieldMessage decodeMessage(byte[] bitField) {
+        BitFieldMessage bitFieldMessage = new BitFieldMessage();
+        for (int i = 0; i < bitField.length; i++) {
+            int count = 7;
+            while (count >= 0) {
+                int test = 1 << count;
+                if (i * 8 + (8 - count - 1) < bitFieldMessage.getNumberOfPieces()) {
+                    if ((bitField[i] & (test)) != 0)
+                        bitFieldMessage.getPieces()[i * 8 + (8 - count - 1)].setIsPresent(1);
+                    else
+                        bitFieldMessage.getPieces()[i * 8 + (8 - count - 1)].setIsPresent(0);
+                }
+                count--;
+            }
+        }
+
+        return bitFieldMessage;
     }
 
 
@@ -31,9 +48,13 @@ public class BitFieldMessage {
         return numberOfPieces;
     }
 
+    public Piece[] getPieces() {
+        return pieces;
+    }
+
     public void setPieceDetails(String peerId, int hasFile) {
 
-        Arrays.asList(filePieces).stream().forEach(x -> {
+        Arrays.asList(pieces).stream().forEach(x -> {
             x.setIsPresent(hasFile);
             x.setFromPeerID(peerId);
         });
@@ -48,7 +69,7 @@ public class BitFieldMessage {
         int count = 0;
         int Cnt;
         for (Cnt = 1; Cnt <= numberOfPieces; Cnt++) {
-            int tempP = filePieces[Cnt - 1].getIsPresent();
+            int tempP = pieces[Cnt - 1].getIsPresent();
             tempInt = tempInt << 1;
             if (tempP == 1) {
                 tempInt = tempInt + 1;
@@ -70,60 +91,24 @@ public class BitFieldMessage {
         return iP;
     }
 
-    public static BitFieldMessage decodeMessage(byte[] bitField) {
-        BitFieldMessage bitFieldMessage = new BitFieldMessage();
-        for (int i = 0; i < bitField.length; i++) {
-            int count = 7;
-            while (count >= 0) {
-                int test = 1 << count;
-                if (i * 8 + (8 - count - 1) < bitFieldMessage.getNumberOfPieces()) {
-                    if ((bitField[i] & (test)) != 0)
-                        bitFieldMessage.getFilePieces()[i * 8 + (8 - count - 1)].setIsPresent(1);
-                    else
-                        bitFieldMessage.getFilePieces()[i * 8 + (8 - count - 1)].setIsPresent(0);
-                }
-                count--;
-            }
-        }
-
-        return bitFieldMessage;
-    }
-
     public int getNumberOfPiecesPresent() {
-        int count = 0;
-        for (FilePiece filePiece : filePieces) {
-            if (filePiece.getIsPresent() == 1) {
-                count++;
-            }
-        }
-
-        return count;
+        return Arrays.asList(pieces).stream().filter(x -> x.getIsPresent() == 1).collect(Collectors.toList()).size();
     }
 
     public boolean isFileDownloadComplete() {
-        boolean isFileDownloaded = true;
-        for (FilePiece filePiece : filePieces) {
-            if (filePiece.getIsPresent() == 0) {
-                isFileDownloaded = false;
-                break;
-            }
-        }
-
-        return isFileDownloaded;
+        return Arrays.asList(pieces).stream().filter(x -> x.getIsPresent() == 0).count() > 0;
     }
 
     public synchronized int getInterestingPieceIndex(BitFieldMessage bitFieldMessage) {
         int numberOfPieces = bitFieldMessage.getNumberOfPieces();
         int interestingPiece = -1;
-
         for (int i = 0; i < numberOfPieces; i++) {
-            if (bitFieldMessage.getFilePieces()[i].getIsPresent() == 1
-                    && this.getFilePieces()[i].getIsPresent() == 0) {
+            if (bitFieldMessage.getPieces()[i].getIsPresent() == 1
+                    && this.getPieces()[i].getIsPresent() == 0) {
                 interestingPiece = i;
                 break;
             }
         }
-
         return interestingPiece;
     }
 
@@ -134,7 +119,7 @@ public class BitFieldMessage {
 
 
         for (int i = 0; i < Math.min(firstPieces, secondPieces); i++) {
-            if (filePieces[i].getIsPresent() == 0 && bitFieldMessage.getFilePieces()[i].getIsPresent() == 1) {
+            if (pieces[i].getIsPresent() == 0 && bitFieldMessage.getPieces()[i].getIsPresent() == 1) {
                 pieceIndex = i;
                 break;
             }
@@ -144,25 +129,25 @@ public class BitFieldMessage {
         return pieceIndex;
     }
 
-    public void updateBitFieldInformation(String peerID, FilePiece filePiece) {
-        int pieceIndex = filePiece.getPieceIndex();
+    public void updateBitFieldInformation(String peerID, Piece piece) {
+        int pieceIndex = piece.getPieceIndex();
         try {
             if (isPieceAlreadyPresent(pieceIndex)) {
-                logAndShowInConsole(peerID + " Piece already received");
+                logAndPrint(peerID + " Piece already received");
             } else {
                 String fileName = CommonConfiguration.fileName;
 
                 File file = new File(peerProcess.currentPeerID, fileName);
                 int offSet = pieceIndex * CommonConfiguration.pieceSize;
                 RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
-                byte[] pieceToWrite = filePiece.getContent();
+                byte[] pieceToWrite = piece.getContent();
                 randomAccessFile.seek(offSet);
                 randomAccessFile.write(pieceToWrite);
 
-                filePieces[pieceIndex].setIsPresent(1);
-                filePieces[pieceIndex].setFromPeerID(peerID);
+                pieces[pieceIndex].setIsPresent(1);
+                pieces[pieceIndex].setFromPeerID(peerID);
                 randomAccessFile.close();
-                logAndShowInConsole(peerProcess.currentPeerID + " has downloaded the PIECE " + pieceIndex
+                logAndPrint(peerProcess.currentPeerID + " has downloaded the PIECE " + pieceIndex
                         + " from Peer " + peerID + ". Now the number of pieces it has is "
                         + peerProcess.bitFieldMessage.getNumberOfPiecesPresent());
 
@@ -172,20 +157,18 @@ public class BitFieldMessage {
                     peerProcess.remotePeerDetailsMap.get(peerID).setIsComplete(1);
                     peerProcess.remotePeerDetailsMap.get(peerID).setIsChoked(0);
                     peerProcess.remotePeerDetailsMap.get(peerID).updatePeerDetails(peerProcess.currentPeerID, 1);
-                    logAndShowInConsole(peerProcess.currentPeerID + " has DOWNLOADED the complete file.");
+                    logAndPrint(peerProcess.currentPeerID + " has DOWNLOADED the complete file.");
                 }
             }
         } catch (IOException e) {
-            logAndShowInConsole(peerProcess.currentPeerID + " EROR in updating bitfield " + e.getMessage());
+            logAndPrint(peerProcess.currentPeerID + " EROR in updating bitfield " + e.getMessage());
+
             e.printStackTrace();
         }
     }
 
     private boolean isPieceAlreadyPresent(int pieceIndex) {
-        return peerProcess.bitFieldMessage.getFilePieces()[pieceIndex].getIsPresent() == 1;
+        return peerProcess.bitFieldMessage.getPieces()[pieceIndex].getIsPresent() == 1;
     }
 
-    private static void logAndShowInConsole(String message) {
-        LogHelper.logAndPrint(message);
-    }
 }

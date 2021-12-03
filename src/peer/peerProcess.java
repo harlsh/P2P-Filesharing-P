@@ -3,7 +3,7 @@ package peer;
 import config.CommonConfiguration;
 import logging.LogHelper;
 import message.BitFieldMessage;
-import message.MessageDetails;
+import message.MessageInfo;
 import server.PeerMessageHandler;
 import server.PeerMessageProcessingHandler;
 import server.PeerServerHandler;
@@ -38,7 +38,7 @@ public class peerProcess {
     public static int currentPeerHasFile;
     public static boolean isDownloadComplete;
     public static Thread messageProcessor;
-    public static volatile ConcurrentLinkedQueue<MessageDetails> messageQueue = new ConcurrentLinkedQueue<>();
+    public static volatile ConcurrentLinkedQueue<MessageInfo> messageQueue = new ConcurrentLinkedQueue<>();
     public static Vector<Thread> peerThreads = new Vector();
     public static Vector<Thread> serverThreads = new Vector();
     public static volatile Timer timerPreferredNeighbors;
