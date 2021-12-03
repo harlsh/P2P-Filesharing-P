@@ -16,10 +16,6 @@ import java.util.TimerTask;
  */
 public class OptimisticallyUnchockedNeighbors extends TimerTask {
 
-    /**
-     * This method runs asynchronously as part of timer task every 'CommonConfiguration.optimisticUnchokingInterval' interval.
-     * It determines optimistically unchoked neighbor at random from all the neighbors which are choked.
-     */
     @Override
     public void run() {
         peerProcess.updateOtherPeerDetails();
@@ -43,7 +39,7 @@ public class OptimisticallyUnchockedNeighbors extends TimerTask {
 
             Collections.shuffle(interestedPeerDetailsInArray);
             RemotePeerDetails selectPeerDetailObject = interestedPeerDetailsInArray.get(0);
-            String selectPeerId = selectPeerDetailObject.getId()
+            String selectPeerId = selectPeerDetailObject.getId();
 
             peerProcess.optimisticUnchokedNeighbors.put(selectPeerId, selectPeerDetailObject);
             logAndShowInConsole(peerProcess.currentPeerID + " makes the optimistically unchoked neighbor " + selectPeerDetailObject.getId() + "now.");

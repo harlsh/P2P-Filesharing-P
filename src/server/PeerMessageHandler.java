@@ -13,16 +13,13 @@ import java.net.Socket;
 
 import static peer.peerProcess.messageQueue;
 
-/**
- * This class is used to write/read messages from socket
- */
 public class PeerMessageHandler implements Runnable {
     private int connType;
     String ownPeerId;
     String remotePeerId;
     private InputStream socketInputStream;
     private OutputStream socketOutputStream;
-    private HandshakeMessage handshakeMessage;
+    private final ThreadLocal<HandshakeMessage> handshakeMessage = new ThreadLocal<>();
     private Socket peerSocket;
 
     public PeerMessageHandler(String address, int port, int connectionType, String serverPeerID) {
@@ -73,9 +70,9 @@ public class PeerMessageHandler implements Runnable {
 
                 while (true) {
                     socketInputStream.read(handShakeMessageInBytes);
-                    handshakeMessage = HandshakeMessage.convertBytesToHandshakeMessage(handShakeMessageInBytes);
-                    if (handshakeMessage.getHeader().equals(Message.MessageConstants.HANDSHAKE_HEADER)) {
-                        remotePeerId = handshakeMessage.getPeerID();
+                    handshakeMessage.set(HandshakeMessage.convertBytesToHandshakeMessage(handShakeMessageInBytes));
+                    if (handshakeMessage.get().getHeader().equals(Message.MessageConstants.HANDSHAKE_HEADER)) {
+                        remotePeerId = handshakeMessage.get().getPeerID();
                         logAndPrint(ownPeerId + " makes a connection to Peer " + remotePeerId);
                         logAndPrint(ownPeerId + " Received a HANDSHAKE message from Peer " + remotePeerId);
                         peerProcess.peerToSocketMap.put(remotePeerId, this.peerSocket);
@@ -92,9 +89,9 @@ public class PeerMessageHandler implements Runnable {
             else {
                 while (true) {
                     socketInputStream.read(handShakeMessageInBytes);
-                    handshakeMessage = HandshakeMessage.convertBytesToHandshakeMessage(handShakeMessageInBytes);
-                    if (handshakeMessage.getHeader().equals(Message.MessageConstants.HANDSHAKE_HEADER)) {
-                        remotePeerId = handshakeMessage.getPeerID();
+                    handshakeMessage.set(HandshakeMessage.convertBytesToHandshakeMessage(handShakeMessageInBytes));
+                    if (handshakeMessage.get().getHeader().equals(Message.MessageConstants.HANDSHAKE_HEADER)) {
+                        remotePeerId = handshakeMessage.get().getPeerID();
                         logAndPrint(ownPeerId + " is connected from Peer " + remotePeerId);
                         logAndPrint(ownPeerId + " Received a HANDSHAKE message from Peer " + remotePeerId);
 

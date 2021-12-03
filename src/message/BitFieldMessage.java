@@ -7,6 +7,7 @@ import peer.peerProcess;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Arrays;
 
 public class BitFieldMessage {
 
@@ -18,10 +19,7 @@ public class BitFieldMessage {
         Double pieceSize = Double.parseDouble(String.valueOf(CommonConfiguration.pieceSize));
         numberOfPieces = (int) Math.ceil((double) fileSize / (double) pieceSize);
         filePieces = new FilePiece[numberOfPieces];
-
-        for (int i = 0; i < numberOfPieces; i++) {
-            filePieces[i] = new FilePiece();
-        }
+        Arrays.fill(filePieces, new FilePiece());
     }
 
     public FilePiece[] getFilePieces() {
@@ -34,14 +32,15 @@ public class BitFieldMessage {
     }
 
     public void setPieceDetails(String peerId, int hasFile) {
-        for (FilePiece filePiece : filePieces) {
-            filePiece.setIsPresent(hasFile);
-            filePiece.setFromPeerID(peerId);
-        }
+
+        Arrays.asList(filePieces).stream().forEach(x -> {
+            x.setIsPresent(hasFile);
+            x.setFromPeerID(peerId);
+        });
     }
 
     public byte[] getBytes() {
-        int s = numberOfPieces / 8;
+        int s = numberOfPieces >> 3;
         if (numberOfPieces % 8 != 0)
             s = s + 1;
         byte[] iP = new byte[s];
@@ -133,21 +132,14 @@ public class BitFieldMessage {
         int secondPieces = bitFieldMessage.getNumberOfPieces();
         int pieceIndex = -1;
 
-        if (secondPieces >= firstPieces) {
-            for (int i = 0; i < firstPieces; i++) {
-                if (filePieces[i].getIsPresent() == 0 && bitFieldMessage.getFilePieces()[i].getIsPresent() == 1) {
-                    pieceIndex = i;
-                    break;
-                }
-            }
-        } else {
-            for (int i = 0; i < secondPieces; i++) {
-                if (filePieces[i].getIsPresent() == 0 && bitFieldMessage.getFilePieces()[i].getIsPresent() == 1) {
-                    pieceIndex = i;
-                    break;
-                }
+
+        for (int i = 0; i < Math.min(firstPieces, secondPieces); i++) {
+            if (filePieces[i].getIsPresent() == 0 && bitFieldMessage.getFilePieces()[i].getIsPresent() == 1) {
+                pieceIndex = i;
+                break;
             }
         }
+
 
         return pieceIndex;
     }
