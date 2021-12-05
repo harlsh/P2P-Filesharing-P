@@ -214,7 +214,7 @@ public class peerProcess {
      */
     public static void determinePreferredNeighbors() {
         timerPreferredNeighbors = new Timer();
-        timerPreferredNeighbors.schedule(new PrefNeighbors(),
+        timerPreferredNeighbors.schedule(new PreferredNeighbors(),
                 CommonConfiguration.unchockingInterval * 1000 * 0,
                 CommonConfiguration.unchockingInterval * 1000);
     }
@@ -224,7 +224,7 @@ public class peerProcess {
      */
     public static void determineOptimisticallyUnchockedNeighbours() {
         timerOptimisticUnchokedNeighbors = new Timer();
-        timerOptimisticUnchokedNeighbors.schedule(new OptimisticallyUnchockedNeighbors(),
+        timerOptimisticUnchokedNeighbors.schedule(new OptimisticallyUnchokedNeighbors(),
                 CommonConfiguration.optimisticUnchokingInterval * 1000 * 0,
                 CommonConfiguration.optimisticUnchokingInterval * 1000
         );

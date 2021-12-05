@@ -13,7 +13,7 @@ import java.util.TimerTask;
 
 import static logging.LogHelper.logAndPrint;
 
-public class PrefNeighbors extends TimerTask {
+public class PreferredNeighbors extends TimerTask {
 
 
     private static void sendUnChokedMessage(Socket socket, String remotePeerID) {

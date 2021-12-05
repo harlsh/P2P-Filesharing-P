@@ -14,7 +14,7 @@ import java.util.TimerTask;
 /**
  * This class is used to determine optimistically unchoked neighbor from a list of choked neighbors
  */
-public class OptimisticallyUnchockedNeighbors extends TimerTask {
+public class OptimisticallyUnchokedNeighbors extends TimerTask {
 
     @Override
     public void run() {

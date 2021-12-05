@@ -1,6 +1,5 @@
 package server;
 
-import logging.LogHelper;
 import message.HandshakeMessage;
 import message.Message;
 import message.MessageInfo;
@@ -11,6 +10,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import static logging.LogHelper.logAndPrint;
 import static peer.peerProcess.messageQueue;
 
 public class PeerMessageHandler implements Runnable {
@@ -47,9 +47,6 @@ public class PeerMessageHandler implements Runnable {
         }
     }
 
-    private static void logAndPrint(String message) {
-        LogHelper.logAndPrint(message);
-    }
 
     @Override
     public void run() {
