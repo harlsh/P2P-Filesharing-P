@@ -61,7 +61,7 @@ public class BitFieldMessage {
     }
 
     public byte[] getBytes() {
-        int s = numberOfPieces >> 3;
+        int s = numberOfPieces / 8;
         if (numberOfPieces % 8 != 0)
             s = s + 1;
         byte[] iP = new byte[s];
