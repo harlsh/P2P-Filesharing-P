@@ -90,7 +90,7 @@ public class PreferredNeighbors extends TimerTask {
                     sendUnChokedMessage(peerProcess.peerToSocketMap.get(peerId), peerId);
                     peerProcess.remotePeerDetailsMap.get(peerId).setIsChoked(0);
                     // not sure why sending have
-                    sendHaveMessage(peerProcess.peerToSocketMap.get(peerId), peerId);
+//                    sendHaveMessage(peerProcess.peerToSocketMap.get(peerId), peerId);
                     peerProcess.remotePeerDetailsMap.get(peerId).setPeerState(3);
                 }
 
