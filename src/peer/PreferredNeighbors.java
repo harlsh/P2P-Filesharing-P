@@ -49,8 +49,6 @@ public class PreferredNeighbors extends TimerTask {
         for (String peerId : peerProcess.remotePeerDetailsMap.keySet()) {
             if (peerId.equals(peerProcess.currentPeerID))
                 continue;
-            if (peerProcess.remotePeerDetailsMap.get(peerId).getIsComplete() == 1)
-                peerProcess.preferredNeighboursMap.remove(peerId);
             else if (peerProcess.remotePeerDetailsMap.get(peerId).getIsComplete() == 0
                     && peerProcess.remotePeerDetailsMap.get(peerId).getIsInterested() == 1
                 // no need to check !peerId.equals(peerProcess.currentPeerID, since we check

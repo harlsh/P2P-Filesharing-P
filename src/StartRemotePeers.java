@@ -24,8 +24,6 @@ public class StartRemotePeers {
     public static String path = System.getProperty("user.dir");
 
     public void getConfiguration() {
-        String st;
-        int i1;
         peerInfoVector = new Vector();
         try {
             List<String> lines = Files.readAllLines(Paths.get("PeerInfo.cfg"));
@@ -47,8 +45,8 @@ public class StartRemotePeers {
         try {
             StartRemotePeers myStart = new StartRemotePeers();
             myStart.getConfiguration();
-            Session session = null;
-            ChannelExec channel = null;
+            Session session;
+            ChannelExec channel;
 
             System.out.println("path: " + path);
 
@@ -60,13 +58,11 @@ public class StartRemotePeers {
             System.out.println();
             System.out.print("Enter password: ");
 
-//            String password = scanner.next();
             String password = new String(console.readPassword());
-            // start clients at remote hosts
             for (int i = 0; i < myStart.peerInfoVector.size(); i++) {
                 RemotePeerDetails pInfo = myStart.peerInfoVector.elementAt(i);
 
-                System.out.println("Start remote peer " + pInfo.getId() + " at " + pInfo.getHostAddress());
+                System.out.println("Starting remote peer " + pInfo.getId() + " at " + pInfo.getHostAddress());
 
                 session = new JSch().getSession(username,  pInfo.getHostAddress() , 22);
                 session.setPassword(password);
@@ -79,7 +75,7 @@ public class StartRemotePeers {
                 ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
                 channel.setOutputStream(responseStream);
                 channel.connect();
-                Thread.sleep(3000);
+                Thread.sleep(1000);
             }
             System.out.println("Started all remote peers");
             System.exit(0);

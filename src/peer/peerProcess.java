@@ -24,6 +24,8 @@ import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import static logging.LogHelper.logAndPrint;
+
 /**
  * This class is used to implement the P2P process to transfer file from peer to peer.
  */
@@ -76,7 +78,7 @@ public class peerProcess {
         try {
             LogHelper logHelper = new LogHelper();
             logHelper.initializeLogger(currentPeerID);
-            logAndPrint(currentPeerID + " is started");
+            logAndPrint(currentPeerID + " has started listening");
 
             initializeConfiguration();
             setCurrentPeerDetails();
@@ -85,8 +87,8 @@ public class peerProcess {
             startMessageProcessingThread(process);
             startFileServerReceiverThreads(process);
 
-            determinePreferredNeighbors(); // ryan
-            determineOptimisticallyUnchockedNeighbours(); // ryan
+            determinePreferredNeighbors();
+            determineOptimisticallyUnchockedNeighbours();
 
             terminatePeer(process);
 
@@ -290,10 +292,6 @@ public class peerProcess {
         }
     }
 
-    /**
-     * This method is used to check if all the peers have downloaded the file
-     * @return true - all peers downloaded the file; false - all peers did not download the file
-     */
     public static synchronized boolean hasDownloadCompleted() {
         boolean isDownloadCompleted = true;
         try {
@@ -312,10 +310,6 @@ public class peerProcess {
         return isDownloadCompleted;
     }
 
-    /**
-     * This method reads Common.cfg and initializes the properties in CommonConfiguration class
-     * @throws IOException
-     */
     public static void initializePeerConfiguration() throws IOException {
         try {
 
@@ -342,17 +336,7 @@ public class peerProcess {
         }
     }
 
-    /**
-     * This method is used to log a message in a log file and show it in console
-     * @param message - message to be logged and showed in console
-     */
-    private static void logAndPrint(String message) {
-        LogHelper.logAndPrint(message);
-    }
 
-    /**
-     * This method reads PeerInfo.cfg file and updates peers in remotePeerDetailsMap
-     */
     public static void updateOtherPeerDetails() {
         try {
             List<String> lines = Files.readAllLines(Paths.get("PeerInfo.cfg"));
