@@ -13,16 +13,16 @@ import java.net.Socket;
 import static logging.LogHelper.logAndPrint;
 import static peer.peerProcess.messageQueue;
 
-public class PeerMessageHandler implements Runnable {
-    private int connType;
+public class MessageHandler implements Runnable {
+    private final ThreadLocal<HandshakeMessage> handshakeMessage = new ThreadLocal<>();
     String ownPeerId;
     String remotePeerId;
+    private int connType;
     private InputStream socketInputStream;
     private OutputStream socketOutputStream;
-    private final ThreadLocal<HandshakeMessage> handshakeMessage = new ThreadLocal<>();
     private Socket peerSocket;
 
-    public PeerMessageHandler(String address, int port, int connectionType, String serverPeerID) {
+    public MessageHandler(String address, int port, int connectionType, String serverPeerID) {
         try {
             connType = connectionType;
             ownPeerId = serverPeerID;
@@ -35,7 +35,7 @@ public class PeerMessageHandler implements Runnable {
         }
     }
 
-    public PeerMessageHandler(Socket socket, int connectionType, String serverPeerID) {
+    public MessageHandler(Socket socket, int connectionType, String serverPeerID) {
         try {
             peerSocket = socket;
             connType = connectionType;
@@ -81,9 +81,7 @@ public class PeerMessageHandler implements Runnable {
                 byte[] b = Message.convertMessageToByteArray(d);
                 socketOutputStream.write(b);
                 peerProcess.remotePeerDetailsMap.get(remotePeerId).setPeerState(8);
-            }
-
-            else {
+            } else {
                 while (true) {
                     socketInputStream.read(handShakeMessageInBytes);
                     handshakeMessage.set(HandshakeMessage.convertBytesToHandshakeMessage(handShakeMessageInBytes));

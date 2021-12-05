@@ -17,14 +17,14 @@ import java.util.Set;
 import static logging.LogHelper.logAndPrint;
 import static peer.peerProcess.messageQueue;
 
-public class PeerMessageProcessingHandler implements Runnable {
+public class MessageProcessingHandler implements Runnable {
 
 
     private static String currentPeerID;
 
     private RandomAccessFile randomAccessFile;
 
-    public PeerMessageProcessingHandler(String peerID) {
+    public MessageProcessingHandler(String peerID) {
         currentPeerID = peerID;
     }
 

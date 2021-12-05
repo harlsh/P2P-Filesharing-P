@@ -4,9 +4,9 @@ import config.CommonConfiguration;
 import logging.LogHelper;
 import message.BitFieldMessage;
 import message.MessageInfo;
-import server.PeerMessageHandler;
-import server.PeerMessageProcessingHandler;
-import server.PeerServerHandler;
+import server.MessageHandler;
+import server.MessageProcessingHandler;
+import server.ServerHandler;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -164,8 +164,8 @@ public class peerProcess {
         for (String peerID : remotePeerDetailsKeys) {
             RemotePeerDetails remotePeerDetails = remotePeerDetailsMap.get(peerID);
 
-            if (process.peerIndex > remotePeerDetails.getIndex()) {
-                Thread tempThread = new Thread(new PeerMessageHandler(
+            if (peerIndex > remotePeerDetails.getIndex()) {
+                Thread tempThread = new Thread(new MessageHandler(
                         remotePeerDetails.getHostAddress(), Integer
                         .parseInt(remotePeerDetails.getPort()), 1,
                         currentPeerID));
@@ -179,7 +179,7 @@ public class peerProcess {
         try {
             //Start a new file server thread
             process.serverSocket = new ServerSocket(currentPeerPort);
-            process.serverThread = new Thread(new PeerServerHandler(process.serverSocket, currentPeerID));
+            process.serverThread = new Thread(new ServerHandler(process.serverSocket, currentPeerID));
             process.serverThread.start();
         } catch (SocketTimeoutException e) {
             logAndPrint(currentPeerID + " Socket Gets Timed out Error - " + e.getMessage());
@@ -235,7 +235,7 @@ public class peerProcess {
      * @param process - peerprrocess to start thread into
      */
     public static void startMessageProcessingThread(peerProcess process) {
-        messageProcessor = new Thread(new PeerMessageProcessingHandler(currentPeerID));
+        messageProcessor = new Thread(new MessageProcessingHandler(currentPeerID));
         messageProcessor.start();
     }
 

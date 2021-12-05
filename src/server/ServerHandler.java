@@ -9,26 +9,26 @@ import java.net.Socket;
 /**
  * This method is used to handle the File server thread
  */
-public class PeerServerHandler implements Runnable {
+public class ServerHandler implements Runnable {
     private ServerSocket serverSocket;
     private String peerID;
     private Socket otherPeerSocket;
     private Thread otherPeerThread;
 
-    public PeerServerHandler(ServerSocket serverSocket, String peerID) {
+    public ServerHandler(ServerSocket serverSocket, String peerID) {
         this.serverSocket = serverSocket;
         this.peerID = peerID;
     }
 
     @Override
     public void run() {
-        while(true) {
-            try{
+        while (true) {
+            try {
                 otherPeerSocket = serverSocket.accept();
-                otherPeerThread = new Thread(new PeerMessageHandler(otherPeerSocket, 0, peerID));
+                otherPeerThread = new Thread(new MessageHandler(otherPeerSocket, 0, peerID));
                 peerProcess.serverThreads.add(otherPeerThread);
                 otherPeerThread.start();
-            }catch (IOException e) {
+            } catch (IOException e) {
 
             }
         }
