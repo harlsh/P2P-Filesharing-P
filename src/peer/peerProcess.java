@@ -91,6 +91,7 @@ public class peerProcess {
             terminatePeer(process);
 
         } catch (Exception e) {
+            System.out.println(e);
         } finally {
             logAndPrint(currentPeerID + " Peer process is exiting..");
             System.exit(0);
@@ -317,6 +318,8 @@ public class peerProcess {
      */
     public static void initializePeerConfiguration() throws IOException {
         try {
+
+            System.out.println("Common.cfg path is " + Paths.get("Common.cfg").toAbsolutePath());
             List<String> lines = Files.readAllLines(Paths.get("Common.cfg"));
             for (String line : lines) {
                 String[] properties = line.split("\\s+");
