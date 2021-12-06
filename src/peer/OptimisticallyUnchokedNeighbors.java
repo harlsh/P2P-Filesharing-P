@@ -53,10 +53,6 @@ public class OptimisticallyUnchokedNeighbors extends TimerTask {
         }
     }
 
-    private boolean hasPeerInterested(RemotePeerDetails remotePeerDetails) {
-        return remotePeerDetails.getIsComplete() == 0 &&
-                remotePeerDetails.getIsChoked() == 1 && remotePeerDetails.getIsInterested() == 1;
-    }
 
     private void sendUnChokedMessage(Socket socket, String remotePeerID) {
         logAndShowInConsole(peerProcess.currentPeerID + " sending a UNCHOKE message to Peer " + remotePeerID);

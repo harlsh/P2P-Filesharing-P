@@ -46,7 +46,7 @@ public class BitFieldMessage {
 
     public byte[] getBytes() {
         int s = numberOfPieces >> 3;
-        if ((numberOfPieces & 7) != 0) // n%m == n & (m-1)
+        if ((numberOfPieces % 8) != 0) // n%m == n & (m-1)
             s = s + 1;
         byte[] iP = new byte[s];
         int tempInt = 0;
@@ -67,7 +67,7 @@ public class BitFieldMessage {
             }
 
         }
-        if (((cnt - 1) & 8) != 0) {
+        if (((cnt - 1) & 7) != 0) {
             int tempShift = ((numberOfPieces) - (numberOfPieces / 8) * 8);
             tempInt = tempInt << (8 - tempShift);
             iP[count] = (byte) tempInt;

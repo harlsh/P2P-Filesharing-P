@@ -71,7 +71,7 @@ public class peerProcess {
      * reads Common.cfg and PeerInfo.cfg and runs peerprocess to transfer files between peers
      */
     @SuppressWarnings({"deprecation", "unchecked"})
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         peerProcess process = new peerProcess();
         currentPeerID = args[0];
 
@@ -94,6 +94,7 @@ public class peerProcess {
 
         } catch (Exception e) {
             System.out.println(e);
+            throw e;
         } finally {
             logAndPrint(currentPeerID + " Peer process is exiting..");
             System.exit(0);

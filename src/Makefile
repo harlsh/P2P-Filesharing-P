@@ -23,3 +23,4 @@ clean:
 	$(RM) message/*.class
 	$(RM) peer/*.class
 	$(RM) server/*.class
+	$(RM) *.log*

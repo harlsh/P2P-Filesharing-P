@@ -49,6 +49,8 @@ public class PreferredNeighbors extends TimerTask {
         for (String peerId : peerProcess.remotePeerDetailsMap.keySet()) {
             if (peerId.equals(peerProcess.currentPeerID))
                 continue;
+            if (peerProcess.remotePeerDetailsMap.get(peerId).getIsComplete() == 1)
+                peerProcess.preferredNeighboursMap.remove(peerId);
             else if (peerProcess.remotePeerDetailsMap.get(peerId).getIsComplete() == 0
                     && peerProcess.remotePeerDetailsMap.get(peerId).getIsInterested() == 1
                 // no need to check !peerId.equals(peerProcess.currentPeerID, since we check
@@ -88,7 +90,7 @@ public class PreferredNeighbors extends TimerTask {
                     sendUnChokedMessage(peerProcess.peerToSocketMap.get(peerId), peerId);
                     peerProcess.remotePeerDetailsMap.get(peerId).setIsChoked(0);
                     // not sure why sending have
-//                    sendHaveMessage(peerProcess.peerToSocketMap.get(peerId), peerId);
+                    sendHaveMessage(peerProcess.peerToSocketMap.get(peerId), peerId);
                     peerProcess.remotePeerDetailsMap.get(peerId).setPeerState(3);
                 }
 
