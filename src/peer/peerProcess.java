@@ -26,9 +26,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static logging.LogHelper.logAndPrint;
 
-/**
- * This class is used to implement the P2P process to transfer file from peer to peer.
- */
+
 @SuppressWarnings({"deprecation", "unchecked"})
 public class peerProcess {
     public Thread serverThread;
@@ -50,26 +48,12 @@ public class peerProcess {
     public static volatile ConcurrentHashMap<String, Socket> peerToSocketMap = new ConcurrentHashMap();
     public static volatile ConcurrentHashMap<String, RemotePeerInfo> optimisticUnchokedNeighbors = new ConcurrentHashMap();
     public ServerSocket serverSocket;
-    /**
-     * This method is used to get server thread
-     * @return server thread
-     */
+
     public Thread getServerThread() {
         return serverThread;
     }
 
-    /**
-     * This method is used to set server thread
-     * @param serverThread - server thread
-     */
-    public void setServerThread(Thread serverThread) {
-        this.serverThread = serverThread;
-    }
 
-    /**
-     * Main method to run p2p file transfer. This method takes processID as input,
-     * reads Common.cfg and PeerInfo.cfg and runs peerprocess to transfer files between peers
-     */
     @SuppressWarnings({"deprecation", "unchecked"})
     public static void main(String[] args) throws Exception {
         peerProcess process = new peerProcess();
@@ -181,7 +165,6 @@ public class peerProcess {
 
     public static void startFileServerThread(peerProcess process) {
         try {
-            //Start a new file server thread
             process.serverSocket = new ServerSocket(currentPeerPort);
             process.serverThread = new Thread(new ServerHandler(process.serverSocket, currentPeerID));
             process.serverThread.start();
@@ -212,9 +195,7 @@ public class peerProcess {
         setPreferredNeighbours();
     }
 
-    /**
-     * This method creates a timer task to determine preferred neighbors
-     */
+
     public static void determinePreferredNeighbors() {
         timerPreferredNeighbors = new Timer();
         timerPreferredNeighbors.schedule(new PreferredNeighbors(),
@@ -222,9 +203,7 @@ public class peerProcess {
                 CommonConfiguration.unchockingInterval * 1000);
     }
 
-    /**
-     * This method creates a timer task to determine optimistically unchoked neighbors
-     */
+
     public static void determineOptimisticallyUnchockedNeighbours() {
         timerOptimisticUnchokedNeighbors = new Timer();
         timerOptimisticUnchokedNeighbors.schedule(new OptimisticallyUnchokedNeighbors(),
@@ -238,9 +217,6 @@ public class peerProcess {
         messageProcessor.start();
     }
 
-    /**
-     * This method is used to create empty file with size 'CommonConfiguration.fileSize' and set zero bits into it
-     */
     public static void createNewFile() {
 
         try {
@@ -251,22 +227,6 @@ public class peerProcess {
         } catch (Exception e) {
 
         }
-
-//        try {
-//            File dir = new File(currentPeerID);
-//            dir.mkdir();
-//
-//            File newfile = new File(currentPeerID, CommonConfiguration.fileName);
-//            OutputStream os = new FileOutputStream(newfile, true);
-//            byte b = 0;
-//
-//            for (int i = 0; i < CommonConfiguration.fileSize; i++)
-//                os.write(b);
-//            os.close();
-//        } catch (Exception e) {
-//            logAndPrint("ERROR in creating the file : " + e.getMessage());
-//            e.printStackTrace();
-//        }
 
     }
 
@@ -305,6 +265,7 @@ public class peerProcess {
                 }
             }
         } catch (IOException e) {
+
             isDownloadCompleted = false;
         }
 
@@ -355,9 +316,6 @@ public class peerProcess {
         }
     }
 
-    /**
-     * Utils class that contains common utility methods
-     */
     public static class PeerProcessUtils {
 
         public static byte[] convertIntToByteArray(int value) {

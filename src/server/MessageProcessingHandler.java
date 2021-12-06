@@ -177,11 +177,13 @@ public class MessageProcessingHandler implements Runnable {
             int peerState = peerProcess.remotePeerDetailsMap.get(remotePeerID).getPeerState();
 
             if (messageType.equals(Message.MessageConstants.MESSAGE_HAVE) && peerState != 14) {
-                logAndPrint("contains interesting pieces from Peer " + remotePeerID);
+
                 if (isPeerInterested(message, remotePeerID)) {
+                    logAndPrint("sending INTERESTED message to Peer " + remotePeerID);
                     sendInterestedMessage(peerProcess.peerToSocketMap.get(remotePeerID), remotePeerID);
                     peerProcess.remotePeerDetailsMap.get(remotePeerID).setPeerState(9);
                 } else {
+                    logAndPrint("sending NOT INTERESTED message to Peer " + remotePeerID);
                     sendNotInterestedMessage(peerProcess.peerToSocketMap.get(remotePeerID), remotePeerID);
                     peerProcess.remotePeerDetailsMap.get(remotePeerID).setPeerState(13);
                 }
