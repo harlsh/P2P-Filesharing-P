@@ -9,9 +9,8 @@ import server.MessageProcessingHandler;
 import server.ServerHandler;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
@@ -218,7 +217,7 @@ public class peerProcess {
     public static void determinePreferredNeighbors() {
         timerPreferredNeighbors = new Timer();
         timerPreferredNeighbors.schedule(new PreferredNeighbors(),
-                CommonConfiguration.unchockingInterval * 1000 * 0,
+                0,
                 CommonConfiguration.unchockingInterval * 1000);
     }
 
@@ -228,7 +227,7 @@ public class peerProcess {
     public static void determineOptimisticallyUnchockedNeighbours() {
         timerOptimisticUnchokedNeighbors = new Timer();
         timerOptimisticUnchokedNeighbors.schedule(new OptimisticallyUnchokedNeighbors(),
-                CommonConfiguration.optimisticUnchokingInterval * 1000 * 0,
+                0,
                 CommonConfiguration.optimisticUnchokingInterval * 1000
         );
     }
@@ -242,21 +241,31 @@ public class peerProcess {
      * This method is used to create empty file with size 'CommonConfiguration.fileSize' and set zero bits into it
      */
     public static void createNewFile() {
+
         try {
             File dir = new File(currentPeerID);
             dir.mkdir();
-
-            File newfile = new File(currentPeerID, CommonConfiguration.fileName);
-            OutputStream os = new FileOutputStream(newfile, true);
-            byte b = 0;
-
-            for (int i = 0; i < CommonConfiguration.fileSize; i++)
-                os.write(b);
-            os.close();
+            RandomAccessFile f = new RandomAccessFile(CommonConfiguration.fileName, "rw");
+            f.setLength(CommonConfiguration.fileSize);
         } catch (Exception e) {
-            logAndPrint("ERROR in creating the file : " + e.getMessage());
-            e.printStackTrace();
+
         }
+
+//        try {
+//            File dir = new File(currentPeerID);
+//            dir.mkdir();
+//
+//            File newfile = new File(currentPeerID, CommonConfiguration.fileName);
+//            OutputStream os = new FileOutputStream(newfile, true);
+//            byte b = 0;
+//
+//            for (int i = 0; i < CommonConfiguration.fileSize; i++)
+//                os.write(b);
+//            os.close();
+//        } catch (Exception e) {
+//            logAndPrint("ERROR in creating the file : " + e.getMessage());
+//            e.printStackTrace();
+//        }
 
     }
 
