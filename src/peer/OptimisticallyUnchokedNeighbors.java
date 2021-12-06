@@ -1,6 +1,5 @@
 package peer;
 
-import logging.LogHelper;
 import message.Message;
 
 import java.io.IOException;
@@ -10,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.TimerTask;
+
+import static logging.LogHelper.logAndPrint;
 
 /**
  * This class is used to determine optimistically unchoked neighbor from a list of choked neighbors
@@ -21,9 +22,9 @@ public class OptimisticallyUnchokedNeighbors extends TimerTask {
         peerProcess.updateOtherPeerDetails();
         peerProcess.optimisticUnchokedNeighbors.clear();
 
-        List<RemotePeerDetails> interestedPeerDetailsInArray = new ArrayList();
+        List<RemotePeerInfo> interestedPeerDetailsInArray = new ArrayList();
         for (String peerId : peerProcess.remotePeerDetailsMap.keySet()) {
-            RemotePeerDetails peerDetailObject = peerProcess.remotePeerDetailsMap.get(peerId);
+            RemotePeerInfo peerDetailObject = peerProcess.remotePeerDetailsMap.get(peerId);
             if (peerId.equals(peerProcess.currentPeerID))
                 continue;
             else if (
@@ -38,11 +39,11 @@ public class OptimisticallyUnchokedNeighbors extends TimerTask {
         if(interestedPeerDetailsInArray.size()>0) {
 
             Collections.shuffle(interestedPeerDetailsInArray);
-            RemotePeerDetails selectPeerDetailObject = interestedPeerDetailsInArray.get(0);
+            RemotePeerInfo selectPeerDetailObject = interestedPeerDetailsInArray.get(0);
             String selectPeerId = selectPeerDetailObject.getId();
 
             peerProcess.optimisticUnchokedNeighbors.put(selectPeerId, selectPeerDetailObject);
-            logAndShowInConsole(peerProcess.currentPeerID + " makes the optimistically unchoked neighbor " + selectPeerDetailObject.getId() + "now.");
+            logAndPrint("Optimistically unchoked neighbor is now " + selectPeerDetailObject.getId());
 
             if(selectPeerDetailObject.getIsChoked() == 1) {
                 peerProcess.remotePeerDetailsMap.get(selectPeerId).setIsChoked(0);
@@ -55,14 +56,14 @@ public class OptimisticallyUnchokedNeighbors extends TimerTask {
 
 
     private void sendUnChokedMessage(Socket socket, String remotePeerID) {
-        logAndShowInConsole(peerProcess.currentPeerID + " sending a UNCHOKE message to Peer " + remotePeerID);
+        logAndPrint("sending a UNCHOKE message to Peer " + remotePeerID);
         Message message = new Message(Message.MessageConstants.MESSAGE_UNCHOKE);
         byte[] messageInBytes = Message.convertMessageToByteArray(message);
         SendMessageToSocket(socket, messageInBytes);
     }
 
     private void sendHaveMessage(Socket socket, String peerID) {
-        logAndShowInConsole(peerProcess.currentPeerID + " sending HAVE message to Peer " + peerID);
+        logAndPrint("sending HAVE message to Peer " + peerID);
         byte[] bitFieldInBytes = peerProcess.bitFieldMessage.getBytes();
         Message message = new Message(Message.MessageConstants.MESSAGE_HAVE, bitFieldInBytes);
         SendMessageToSocket(socket, Message.convertMessageToByteArray(message));
@@ -76,7 +77,4 @@ public class OptimisticallyUnchokedNeighbors extends TimerTask {
         }
     }
 
-    private static void logAndShowInConsole(String message) {
-        LogHelper.logAndPrint(message);
-    }
 }

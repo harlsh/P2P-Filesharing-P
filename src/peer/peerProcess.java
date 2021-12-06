@@ -15,6 +15,7 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -45,10 +46,10 @@ public class peerProcess {
     public static Vector<Thread> serverThreads = new Vector();
     public static volatile Timer timerPreferredNeighbors;
     public static volatile Timer timerOptimisticUnchokedNeighbors;
-    public static volatile ConcurrentHashMap<String, RemotePeerDetails> remotePeerDetailsMap = new ConcurrentHashMap();
-    public static volatile ConcurrentHashMap<String, RemotePeerDetails> preferredNeighboursMap = new ConcurrentHashMap();
+    public static volatile ConcurrentHashMap<String, RemotePeerInfo> remotePeerDetailsMap = new ConcurrentHashMap();
+    public static volatile ConcurrentHashMap<String, RemotePeerInfo> preferredNeighboursMap = new ConcurrentHashMap();
     public static volatile ConcurrentHashMap<String, Socket> peerToSocketMap = new ConcurrentHashMap();
-    public static volatile ConcurrentHashMap<String, RemotePeerDetails> optimisticUnchokedNeighbors = new ConcurrentHashMap();
+    public static volatile ConcurrentHashMap<String, RemotePeerInfo> optimisticUnchokedNeighbors = new ConcurrentHashMap();
     public ServerSocket serverSocket;
     /**
      * This method is used to get server thread
@@ -78,13 +79,13 @@ public class peerProcess {
         try {
             LogHelper logHelper = new LogHelper();
             logHelper.initializeLogger(currentPeerID);
-            logAndPrint(currentPeerID + " has started listening");
+            logAndPrint("Started listening...");
 
             initializeConfiguration();
             setCurrentPeerDetails();
             initializeBitFieldMessage();
 
-            startMessageProcessingThread(process);
+            startMessageProcessingThread();
             startFileServerReceiverThreads(process);
 
             determinePreferredNeighbors();
@@ -96,7 +97,7 @@ public class peerProcess {
             System.out.println(e);
             throw e;
         } finally {
-            logAndPrint(currentPeerID + " Peer process is exiting..");
+            logAndPrint("Peer process is exiting..");
             System.exit(0);
         }
     }
@@ -165,12 +166,12 @@ public class peerProcess {
     public static void startFileReceiverThreads(peerProcess process) {
         Set<String> remotePeerDetailsKeys = remotePeerDetailsMap.keySet();
         for (String peerID : remotePeerDetailsKeys) {
-            RemotePeerDetails remotePeerDetails = remotePeerDetailsMap.get(peerID);
+            RemotePeerInfo remotePeerInfo = remotePeerDetailsMap.get(peerID);
 
-            if (peerIndex > remotePeerDetails.getIndex()) {
+            if (peerIndex > remotePeerInfo.getIndex()) {
                 Thread tempThread = new Thread(new MessageHandler(
-                        remotePeerDetails.getHostAddress(), Integer
-                        .parseInt(remotePeerDetails.getPort()), 1,
+                        remotePeerInfo.getHostAddress(), Integer
+                        .parseInt(remotePeerInfo.getPort()), 1,
                         currentPeerID));
                 peerThreads.add(tempThread);
                 tempThread.start();
@@ -185,7 +186,7 @@ public class peerProcess {
             process.serverThread = new Thread(new ServerHandler(process.serverSocket, currentPeerID));
             process.serverThread.start();
         } catch (SocketTimeoutException e) {
-            logAndPrint(currentPeerID + " Socket Gets Timed out Error - " + e.getMessage());
+            logAndPrint("Socket Gets Timed out Error - " + e.getMessage());
             e.printStackTrace();
             System.exit(0);
         } catch (IOException e) {
@@ -195,21 +196,20 @@ public class peerProcess {
     }
 
     public static void setCurrentPeerDetails() {
-        final RemotePeerDetails remotePeerDetails = remotePeerDetailsMap.get(currentPeerID);
-        currentPeerPort = Integer.parseInt(remotePeerDetails.getPort());
-        peerIndex = remotePeerDetails.getIndex();
-        if (remotePeerDetails.getHasFile() == 1) {
+        final RemotePeerInfo remotePeerInfo = remotePeerDetailsMap.get(currentPeerID);
+        currentPeerPort = Integer.parseInt(remotePeerInfo.getPort());
+        peerIndex = remotePeerInfo.getIndex();
+        if (remotePeerInfo.getHasFile() == 1) {
             isFirstPeer = true;
-            currentPeerHasFile = remotePeerDetails.getHasFile();
+            currentPeerHasFile = remotePeerInfo.getHasFile();
         }
 
     }
 
     public static void initializeConfiguration() throws Exception {
-        initializePeerConfiguration();
-        addOtherPeerDetails();
+        readCommonConfigFile();
+        readPeerInfoFile();
         setPreferredNeighbours();
-
     }
 
     /**
@@ -233,11 +233,7 @@ public class peerProcess {
         );
     }
 
-    /**
-     * This method is used to start message processing thread
-     * @param process - peerprrocess to start thread into
-     */
-    public static void startMessageProcessingThread(peerProcess process) {
+    public static void startMessageProcessingThread() {
         messageProcessor = new Thread(new MessageProcessingHandler(currentPeerID));
         messageProcessor.start();
     }
@@ -258,35 +254,29 @@ public class peerProcess {
                 os.write(b);
             os.close();
         } catch (Exception e) {
-            logAndPrint(currentPeerID + " ERROR in creating the file : " + e.getMessage());
+            logAndPrint("ERROR in creating the file : " + e.getMessage());
             e.printStackTrace();
         }
 
     }
 
-    /**
-     * This method is used to set preferred neighbors of a peer
-     */
     public static void setPreferredNeighbours() {
-        Set<String> remotePeerIDs = remotePeerDetailsMap.keySet();
-        for (String peerID : remotePeerIDs) {
-            RemotePeerDetails remotePeerDetails = remotePeerDetailsMap.get(peerID);
-            if (remotePeerDetails != null && !peerID.equals(currentPeerID)) {
-                preferredNeighboursMap.put(peerID, remotePeerDetails);
+        for (String peerID : remotePeerDetailsMap.keySet()) {
+            RemotePeerInfo remotePeerInfo = remotePeerDetailsMap.get(peerID);
+            if (!peerID.equals(currentPeerID)) {
+                preferredNeighboursMap.put(peerID, remotePeerInfo);
             }
         }
+        logAndPrint("NeighborsMap: " + remotePeerDetailsMap);
     }
 
-    /**
-     * This method reads PeerInfo.cfg file and adds peers to remotePeerDetailsMap
-     */
-    public static void addOtherPeerDetails() throws IOException {
+    public static void readPeerInfoFile() throws IOException {
         try {
             List<String> lines = Files.readAllLines(Paths.get("PeerInfo.cfg"));
             for (int i = 0; i < lines.size(); i++) {
                 String[] properties = lines.get(i).split("\\s+");
                 remotePeerDetailsMap.put(properties[0],
-                        new RemotePeerDetails(properties[0], properties[1], properties[2], Integer.parseInt(properties[3]), i));
+                        new RemotePeerInfo(properties[0], properties[1], properties[2], Integer.parseInt(properties[3]), i));
             }
         } catch (IOException e) {
             throw e;
@@ -311,10 +301,10 @@ public class peerProcess {
         return isDownloadCompleted;
     }
 
-    public static void initializePeerConfiguration() throws IOException {
+    public static void readCommonConfigFile() throws IOException {
         try {
 
-            System.out.println("Common.cfg path is " + Paths.get("Common.cfg").toAbsolutePath());
+            System.out.println("Reading data from Common.cfg");
             List<String> lines = Files.readAllLines(Paths.get("Common.cfg"));
             for (String line : lines) {
                 String[] properties = line.split("\\s+");
@@ -352,6 +342,20 @@ public class peerProcess {
                 }
             }
         } catch (IOException e) {
+        }
+    }
+
+    /**
+     * Utils class that contains common utility methods
+     */
+    public static class PeerProcessUtils {
+
+        public static byte[] convertIntToByteArray(int value) {
+            return ByteBuffer.allocate(4).putInt(value).array();
+        }
+
+        public static int convertByteArrayToInt(byte[] dataInBytes) {
+            return ByteBuffer.wrap(dataInBytes).getInt();
         }
     }
 }

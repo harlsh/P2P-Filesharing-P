@@ -151,7 +151,7 @@ public class BitFieldMessage {
         int pieceIndex = filePiece.getPieceIndex();
         try {
             if (isPieceAlreadyPresent(pieceIndex)) {
-                logAndPrint(peerID + " Piece already received");
+                logAndPrint("Piece already received");
             } else {
                 String fileName = CommonConfiguration.fileName;
 
@@ -165,8 +165,8 @@ public class BitFieldMessage {
                 pieces[pieceIndex].setIsPresent(1);
                 pieces[pieceIndex].setFromPeerID(peerID);
                 randomAccessFile.close();
-                logAndPrint(peerProcess.currentPeerID + " has downloaded the PIECE " + pieceIndex
-                        + " from Peer " + peerID + ". Now the number of pieces it has is "
+                logAndPrint("has downloaded the PIECE " + pieceIndex
+                        + " from Peer " + peerID + ". Number of pieces now is "
                         + peerProcess.bitFieldMessage.getNumberOfPiecesPresent());
 
                 if (peerProcess.bitFieldMessage.isFileDownloadComplete()) {
@@ -175,11 +175,12 @@ public class BitFieldMessage {
                     peerProcess.remotePeerDetailsMap.get(peerID).setIsComplete(1);
                     peerProcess.remotePeerDetailsMap.get(peerID).setIsChoked(0);
                     peerProcess.remotePeerDetailsMap.get(peerID).updatePeerDetails(peerProcess.currentPeerID, 1);
-                    logAndPrint(peerProcess.currentPeerID + " has DOWNLOADED the complete file.");
+                    logAndPrint("has DOWNLOADED the complete file.");
+                    logAndPrint("Waiting for other peers to finish");
                 }
             }
         } catch (IOException e) {
-            logAndPrint(peerProcess.currentPeerID + " EROR in updating bitfield " + e.getMessage());
+            logAndPrint(peerProcess.currentPeerID + " ERROR in updating bitfield " + e.getMessage());
             e.printStackTrace();
         }
     }

@@ -6,9 +6,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-/**
- * This method is used to handle the File server thread
- */
+
 public class ServerHandler implements Runnable {
     private ServerSocket serverSocket;
     private String peerID;

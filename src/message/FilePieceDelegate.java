@@ -1,6 +1,6 @@
 package message;
 
-import peer.PeerProcessUtils;
+import peer.peerProcess;
 
 public class FilePieceDelegate {
     int isPresent;
@@ -15,7 +15,7 @@ public class FilePieceDelegate {
         byte[] indexInBytes = new byte[Message.MessageConstants.PIECE_INDEX_LENGTH];
         Piece piece = new Piece();
         System.arraycopy(payloadInBytes, 0, indexInBytes, 0, Message.MessageConstants.PIECE_INDEX_LENGTH);
-        piece.setPieceIndex(PeerProcessUtils.convertByteArrayToInt(indexInBytes));
+        piece.setPieceIndex(peerProcess.PeerProcessUtils.convertByteArrayToInt(indexInBytes));
         piece.setContent(new byte[payloadInBytes.length - Message.MessageConstants.PIECE_INDEX_LENGTH]);
         System.arraycopy(payloadInBytes, Message.MessageConstants.PIECE_INDEX_LENGTH, piece.getContent(), 0, payloadInBytes.length - Message.MessageConstants.PIECE_INDEX_LENGTH);
         return piece;

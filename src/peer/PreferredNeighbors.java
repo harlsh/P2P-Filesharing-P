@@ -17,7 +17,7 @@ public class PreferredNeighbors extends TimerTask {
 
 
     private static void sendUnChokedMessage(Socket socket, String remotePeerID) {
-        logAndPrint(peerProcess.currentPeerID + " sending a UNCHOKE message to Peer " + remotePeerID);
+        logAndPrint("Sending an UNCHOKE message to Peer " + remotePeerID);
         Message message = new Message(Message.MessageConstants.MESSAGE_UNCHOKE);
         sendMessageToSocket(socket, Message.convertMessageToByteArray(message));
     }
@@ -32,7 +32,7 @@ public class PreferredNeighbors extends TimerTask {
     }
 
     private void sendHaveMessage(Socket socket, String peerID) {
-        logAndPrint(peer.peerProcess.currentPeerID + " sending HAVE message to Peer " + peerID);
+        logAndPrint("Sending HAVE message to Peer " + peerID);
         byte[] bitFieldInBytes = peerProcess.bitFieldMessage.getBytes();
         Message message = new Message(Message.MessageConstants.MESSAGE_HAVE, bitFieldInBytes);
         sendMessageToSocket(socket, Message.convertMessageToByteArray(message));
@@ -43,7 +43,7 @@ public class PreferredNeighbors extends TimerTask {
         Integer peerInPreferredNeighbors = 0;
         peerProcess.updateOtherPeerDetails();  //updates remotePeerInfo from PeerInfo.cfg to remotePeerDetailsMap
 
-        List<RemotePeerDetails> interestedPeerDetailsInArray = new ArrayList();
+        List<RemotePeerInfo> interestedPeerDetailsInArray = new ArrayList();
         // scan through all peer
 
         for (String peerId : peerProcess.remotePeerDetailsMap.keySet()) {
@@ -72,7 +72,7 @@ public class PreferredNeighbors extends TimerTask {
                 Collections.sort(interestedPeerDetailsInArray, (a, b) -> a.compareTo(b));
 
             int countPreferredPeers = 0;
-            for (RemotePeerDetails peerDetail : interestedPeerDetailsInArray) {
+            for (RemotePeerInfo peerDetail : interestedPeerDetailsInArray) {
 
                 // we use peerDetail.getId() too much, so it better to assign it here.
                 String peerId = peerDetail.getId();
@@ -103,7 +103,7 @@ public class PreferredNeighbors extends TimerTask {
             peerProcess.preferredNeighboursMap.clear();
 
             // update preferredNeighboursMap and preferredNeighbors
-            for (RemotePeerDetails peerDetail : interestedPeerDetailsInArray) {
+            for (RemotePeerInfo peerDetail : interestedPeerDetailsInArray) {
 
                 String peerId = peerDetail.getId();
 
@@ -125,6 +125,6 @@ public class PreferredNeighbors extends TimerTask {
             }
         }
         if (preferredNeighborsInString.length() != 0)
-            logAndPrint(peerProcess.currentPeerID + " has selected the preferred neighbors - " + preferredNeighborsInString.toString());
+            logAndPrint("Selected the preferred neighbors  {" + preferredNeighborsInString.toString() + "}");
     }
 }

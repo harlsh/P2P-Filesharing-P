@@ -10,8 +10,13 @@ import java.util.logging.Logger;
 
 public class LogHelper {
     public FileHandler fileHandler;
-
+    private static String peerID;
     public static Logger log = Logger.getLogger(LogHelper.class.getName());
+
+    public static void logAndPrint(String message) {
+        log.info(peerID + ": " + message);
+        System.out.println(LogFormatter.getFormattedMessage(message));
+    }
 
     public void initializeLogger(String currentPeerID) {
         try {
@@ -19,14 +24,10 @@ public class LogHelper {
             fileHandler.setFormatter(new LogFormatter());
             log.addHandler(fileHandler);
             log.setUseParentHandlers(false);
+            peerID = currentPeerID;
         } catch (IOException e) {
 
         }
-    }
-
-    public static void logAndPrint(String message) {
-        log.info(message);
-        System.out.println(LogFormatter.getFormattedMessage(message));
     }
 
     public static class LogFormatter extends Formatter {

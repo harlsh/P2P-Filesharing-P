@@ -1,7 +1,7 @@
 package message;
 
 import logging.LogHelper;
-import peer.PeerProcessUtils;
+import peer.peerProcess;
 
 import java.io.UnsupportedEncodingException;
 
@@ -73,18 +73,45 @@ public class Message {
         LogHelper.logAndPrint(message);
     }
 
+    public static Message convertByteArrayToMessage(byte[] message) {
+
+        Message msg = new Message();
+        byte[] msgLength = new byte[MessageConstants.MESSAGE_LENGTH];
+        byte[] msgType = new byte[MessageConstants.MESSAGE_TYPE];
+        byte[] payLoad = null;
+        int len;
+
+        try {
+            if (message == null)
+                throw new Exception("Invalid data.");
+            else if (message.length < MessageConstants.MESSAGE_LENGTH + MessageConstants.MESSAGE_TYPE)
+                throw new Exception("Byte array length is too small...");
+
+
+            System.arraycopy(message, 0, msgLength, 0, MessageConstants.MESSAGE_LENGTH);
+            System.arraycopy(message, MessageConstants.MESSAGE_LENGTH, msgType, 0, MessageConstants.MESSAGE_TYPE);
+
+            msg.setMessageLength(msgLength);
+            msg.setMessageType(msgType);
+
+            len = peerProcess.PeerProcessUtils.convertByteArrayToInt(msgLength);
+
+            if (len > 1) {
+                payLoad = new byte[len - 1];
+                System.arraycopy(message, MessageConstants.MESSAGE_LENGTH + MessageConstants.MESSAGE_TYPE, payLoad, 0, message.length - MessageConstants.MESSAGE_LENGTH - MessageConstants.MESSAGE_TYPE);
+                msg.setPayload(payLoad);
+            }
+        } catch (Exception e) {
+            LogHelper.logAndPrint(e.toString());
+            msg = null;
+        }
+        return msg;
+    }
+
     public void setMessageLength(int messageLength) {
         dataLength = messageLength;
         length = ((Integer) messageLength).toString();
-        lengthInBytes = PeerProcessUtils.convertIntToByteArray(messageLength);
-    }
-
-    public void setMessageLength(byte[] len) {
-
-        Integer l = PeerProcessUtils.convertByteArrayToInt(len);
-        this.length = l.toString();
-        this.lengthInBytes = len;
-        this.dataLength = l;
+        lengthInBytes = peerProcess.PeerProcessUtils.convertIntToByteArray(messageLength);
     }
 
     public void setMessageType(String messageType) {
@@ -131,39 +158,12 @@ public class Message {
         return messageInByteArray;
     }
 
-    public static Message convertByteArrayToMessage(byte[] message) {
+    public void setMessageLength(byte[] len) {
 
-        Message msg = new Message();
-        byte[] msgLength = new byte[MessageConstants.MESSAGE_LENGTH];
-        byte[] msgType = new byte[MessageConstants.MESSAGE_TYPE];
-        byte[] payLoad = null;
-        int len;
-
-        try {
-            if (message == null)
-                throw new Exception("Invalid data.");
-            else if (message.length < MessageConstants.MESSAGE_LENGTH + MessageConstants.MESSAGE_TYPE)
-                throw new Exception("Byte array length is too small...");
-
-
-            System.arraycopy(message, 0, msgLength, 0, MessageConstants.MESSAGE_LENGTH);
-            System.arraycopy(message, MessageConstants.MESSAGE_LENGTH, msgType, 0, MessageConstants.MESSAGE_TYPE);
-
-            msg.setMessageLength(msgLength);
-            msg.setMessageType(msgType);
-
-            len = PeerProcessUtils.convertByteArrayToInt(msgLength);
-
-            if (len > 1) {
-                payLoad = new byte[len - 1];
-                System.arraycopy(message, MessageConstants.MESSAGE_LENGTH + MessageConstants.MESSAGE_TYPE, payLoad, 0, message.length - MessageConstants.MESSAGE_LENGTH - MessageConstants.MESSAGE_TYPE);
-                msg.setPayload(payLoad);
-            }
-        } catch (Exception e) {
-            LogHelper.logAndPrint(e.toString());
-            msg = null;
-        }
-        return msg;
+        Integer l = peerProcess.PeerProcessUtils.convertByteArrayToInt(len);
+        this.length = l.toString();
+        this.lengthInBytes = len;
+        this.dataLength = l;
     }
 
     public String getType() {

@@ -1,7 +1,7 @@
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
-import peer.RemotePeerDetails;
+import peer.RemotePeerInfo;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Console;
@@ -20,21 +20,8 @@ import java.util.Vector;
  */
 public class StartRemotePeers {
 
-    public Vector<RemotePeerDetails> peerInfoVector;
+    public Vector<RemotePeerInfo> peerInfoVector;
     public static String path = System.getProperty("user.dir");
-
-    public void getConfiguration() {
-        peerInfoVector = new Vector();
-        try {
-            List<String> lines = Files.readAllLines(Paths.get("PeerInfo.cfg"));
-            for (int i = 0; i < lines.size(); i++) {
-                String[] properties = lines.get(i).split("\\s+");
-                peerInfoVector.addElement(new RemotePeerDetails(properties[0], properties[1], properties[2], Integer.parseInt(properties[3]), i));
-            }
-        } catch (Exception ex) {
-            System.out.println(ex.toString());
-        }
-    }
 
     /**
      * @param args
@@ -60,7 +47,7 @@ public class StartRemotePeers {
 
             String password = new String(console.readPassword());
             for (int i = 0; i < myStart.peerInfoVector.size(); i++) {
-                RemotePeerDetails pInfo = myStart.peerInfoVector.elementAt(i);
+                RemotePeerInfo pInfo = myStart.peerInfoVector.elementAt(i);
 
                 System.out.println("Starting remote peer " + pInfo.getId() + " at " + pInfo.getHostAddress());
 
@@ -81,6 +68,20 @@ public class StartRemotePeers {
             System.exit(0);
         } catch (Exception ex) {
             System.out.println(ex);
+        }
+    }
+
+    public void getConfiguration() {
+        peerInfoVector = new Vector();
+        try {
+            System.out.println("Reading data from PeerInfo.cfg");
+            List<String> lines = Files.readAllLines(Paths.get("PeerInfo.cfg"));
+            for (int i = 0; i < lines.size(); i++) {
+                String[] properties = lines.get(i).split("\\s+");
+                peerInfoVector.addElement(new RemotePeerInfo(properties[0], properties[1], properties[2], Integer.parseInt(properties[3]), i));
+            }
+        } catch (Exception ex) {
+            System.out.println(ex.toString());
         }
     }
 }
