@@ -35,7 +35,7 @@ public class LogHelper {
 
         public static String getFormattedMessage(String message) {
             StringBuilder sb = new StringBuilder();
-            return sb.append(dateTimeFormatter.format(LocalDateTime.now()) + ": Peer " + peerID + ": " + message + "\n").toString();
+            return sb.append(dateTimeFormatter.format(LocalDateTime.now()) + " PEER " + message + "\n").toString();
         }
 
         @Override

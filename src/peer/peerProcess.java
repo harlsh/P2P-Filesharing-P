@@ -93,6 +93,7 @@ public class peerProcess {
             terminatePeer(process);
 
         } catch (Exception e) {
+            logAndPrint(e.toString());
             System.out.println(e);
             throw e;
         } finally {

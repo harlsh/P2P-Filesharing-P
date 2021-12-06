@@ -166,7 +166,7 @@ public class MessageProcessingHandler implements Runnable {
             messageInfo = messageQueue.poll();
             while (messageInfo == null) {
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                 }
                 messageInfo = messageQueue.poll();
